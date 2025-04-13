@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import io.kindbrave.mnnserver.navigation.Navigation
 import io.kindbrave.mnnserver.ui.screens.LogsScreen
 import io.kindbrave.mnnserver.ui.screens.MainScreen
 import io.kindbrave.mnnserver.ui.theme.MNNServerTheme
@@ -27,26 +28,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-                    val mainViewModel: MainViewModel = viewModel()
-                    
-                    NavHost(
-                        navController = navController,
-                        startDestination = "main"
-                    ) {
-                        composable("main") {
-                            MainScreen(
-                                viewModel = mainViewModel,
-                                navController = navController
-                            )
-                        }
-                        composable("logs") {
-                            LogsScreen(
-                                viewModel = mainViewModel,
-                                navController = navController
-                            )
-                        }
-                    }
+                    Navigation()
                 }
             }
         }

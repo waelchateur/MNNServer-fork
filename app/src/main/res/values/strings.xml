@@ -30,4 +30,8 @@
     <string name="enter_model_name">Enter Model Name</string>
     <string name="model_name">Model Name</string>
     <string name="imports">Import</string>
+    <string name="device_info">Device Information</string>
+    <string name="memory">Memory</string>
+    <string name="storage">Storage</string>
+    <string name="running_models">Currently running %d models</string>
 </resources>

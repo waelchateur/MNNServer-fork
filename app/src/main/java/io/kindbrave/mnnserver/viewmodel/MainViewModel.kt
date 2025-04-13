@@ -6,21 +6,22 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Environment
 import android.os.IBinder
-import android.widget.Toast
+import android.os.StatFs
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.kindbrave.mnnserver.data.ServerPreferences
 import io.kindbrave.mnnserver.data.LogRepository
+import io.kindbrave.mnnserver.data.SettingsRepository
 import io.kindbrave.mnnserver.model.ModelManager
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.service.WebServerService
+import io.kindbrave.mnnserver.ui.screens.DeviceInfo
 import io.kindbrave.mnnserver.utils.LogManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -28,7 +29,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
     private val modelManager = ModelManager(context)
     private val llmService = LLMService.getInstance()
-    private val serverPreferences = ServerPreferences(application)
+    private val settingsRepository = SettingsRepository(application)
     private val logRepository = LogRepository(application)
     
     // WebServerService 绑定
@@ -82,16 +83,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isServiceRunning = MutableStateFlow(false)
     val isServiceRunning: StateFlow<Boolean> = _isServiceRunning.asStateFlow()
     
+    private val _loadedModelsCount = MutableStateFlow(0)
+    val loadedModelsCount: StateFlow<Int> = _loadedModelsCount.asStateFlow()
+    
+    private val _deviceInfo = MutableStateFlow(DeviceInfo(0, 0, 0, 0))
+    val deviceInfo: StateFlow<DeviceInfo> = _deviceInfo.asStateFlow()
+    
     init {
         // 监听模型列表变化
         viewModelScope.launch {
             modelManager.modelList.collect { models ->
                 _modelList.value = models
+                _loadedModelsCount.value = models.count { it.isLoaded }
             }
         }
 
         viewModelScope.launch {
-            serverPreferences.serverPort.collect { port ->
+            settingsRepository.serverPort.collect { port ->
                 _serverPort.value = port
             }
         }
@@ -100,6 +108,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         bindService()
         
         checkServiceStatus()
+        
+        updateSystemInfo()
     }
     
     private fun bindService() {
@@ -111,10 +121,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         context.unbindService(serviceConnection)
     }
     
-    fun startServer(port: Int) {
+    fun startServer() {
         viewModelScope.launch {
-            serverPreferences.setServerPort(port)
-            WebServerService.startService(context, port)
+            WebServerService.startService(context, _serverPort.value)
         }
     }
     
@@ -131,9 +140,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun importModel() {
-        viewModelScope.launch {
-            //modelManager.importModel()
-        }
+        // modelManager.importModel()
     }
     
     fun importModelWithName(name: String) {
@@ -144,21 +151,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun loadModel(model: ModelManager.ModelInfo) {
-        viewModelScope.launch {
-            //modelManager.loadModel(model)
-        }
+        // modelManager.loadModel(model)
     }
     
     fun unloadModel(model: ModelManager.ModelInfo) {
-        viewModelScope.launch {
-            //modelManager.unloadModel(model)
-        }
+        // modelManager.unloadModel(model)
     }
     
     fun deleteModel(model: ModelManager.ModelInfo) {
-        viewModelScope.launch {
-            //modelManager.deleteModel(model)
-        }
+        // modelManager.deleteModel(model)
     }
     
     fun addLog(message: String) {
@@ -192,13 +193,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     private suspend fun startService() {
         val port = _serverPort.value
-        startServer(port)
+        startServer()
         logRepository.addLog("Service started on port $port")
     }
     
     private suspend fun stopService() {
         stopServer()
         logRepository.addLog("Service stopped")
+    }
+    
+    private fun updateSystemInfo() {
+        viewModelScope.launch {
+            val context = getApplication<Application>()
+            
+            // Get memory info
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val memoryInfo = android.app.ActivityManager.MemoryInfo()
+            activityManager.getMemoryInfo(memoryInfo)
+            
+            val availableMemory = memoryInfo.availMem / (1024 * 1024) // Convert to MB
+            val totalMemory = memoryInfo.totalMem / (1024 * 1024) // Convert to MB
+            
+            // Get storage info
+            val stat = StatFs(Environment.getDataDirectory().path)
+            val blockSize = stat.blockSizeLong
+            val totalBlocks = stat.blockCountLong
+            val availableBlocks = stat.availableBlocksLong
+            
+            val totalStorage = (totalBlocks * blockSize) / (1024 * 1024 * 1024) // Convert to GB
+            val availableStorage = (availableBlocks * blockSize) / (1024 * 1024 * 1024) // Convert to GB
+            
+            _deviceInfo.value = DeviceInfo(
+                availableMemory = availableMemory,
+                totalMemory = totalMemory,
+                availableStorage = availableStorage,
+                totalStorage = totalStorage
+            )
+        }
     }
     
     override fun onCleared() {

@@ -24,4 +24,14 @@
     <string name="invalid_port">无效的端口号</string>
     <string name="save">保存</string>
     <string name="cancel">取消</string>
+    <string name="clear">清除</string>
+    <string name="server_settings">服务器设置</string>
+    <string name="port">端口</string>
+    <string name="enter_model_name">输入模型名称</string>
+    <string name="model_name">模型名称</string>
+    <string name="imports">导入</string>
+    <string name="device_info">设备信息</string>
+    <string name="memory">内存</string>
+    <string name="storage">存储</string>
+    <string name="running_models">当前运行%d个模型</string>
 </resources> 
