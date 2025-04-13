@@ -1,5 +1,8 @@
 package io.kindbrave.mnnserver.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +35,36 @@ fun ModelListScreen(
     viewModel: ModelListViewModel = viewModel()
 ) {
     val modelList by viewModel.modelList.collectAsState()
+    val importState by viewModel.importState.collectAsState()
+    var showNameDialog by remember { mutableStateOf(false) }
+    
+    // 文件选择器
+    val folderPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onFolderSelected(it)
+            showNameDialog = true
+        }
+    }
+    
+    // 监听导入状态
+    LaunchedEffect(importState) {
+        when (importState) {
+            is ModelListViewModel.ImportState.SelectFolder -> {
+                folderPicker.launch(null)
+            }
+            is ModelListViewModel.ImportState.Success -> {
+                // 导入成功后重置状态
+                viewModel.resetImportState()
+            }
+            is ModelListViewModel.ImportState.Error -> {
+                // TODO: 显示错误提示
+                viewModel.resetImportState()
+            }
+            else -> {}
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -67,7 +101,29 @@ fun ModelListScreen(
             )
         }
         
-        ModelNameDialog()
+        // 模型名称输入对话框
+        if (showNameDialog) {
+            ModelNameDialog(
+                onDismiss = { 
+                    showNameDialog = false
+                    viewModel.resetImportState()
+                },
+                onConfirm = { name ->
+                    showNameDialog = false
+                    viewModel.onNameEntered(name)
+                }
+            )
+        }
+        
+        // 导入进度提示
+        if (importState is ModelListViewModel.ImportState.Importing) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
 
