@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.model.ModelManager
 import io.kindbrave.mnnserver.service.LLMService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ModelListViewModel(application: Application) : AndroidViewModel(application) {
-    private val modelManager = ModelManager(application)
+class ModelListViewModel(private val application: Application) : AndroidViewModel(application) {
+    private val modelManager = ModelManager.getInstance(application)
     private val llmService = LLMService.getInstance()
     
     private val _modelList = MutableStateFlow<List<ModelManager.ModelInfo>>(emptyList())
@@ -21,6 +22,10 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
     // 导入状态管理
     private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)
     val importState: StateFlow<ImportState> = _importState.asStateFlow()
+    
+    // 加载状态管理
+    private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
     
     // 选中的URI
     private var selectedUri: Uri? = null
@@ -43,6 +48,11 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
     }
     
     fun onNameEntered(modelName: String) {
+        if (!isValidModelName(modelName)) {
+            _importState.value = ImportState.Error(application.getString(R.string.invalid_model_name))
+            return
+        }
+
         viewModelScope.launch {
             _importState.value = ImportState.Importing
             selectedUri?.let { uri ->
@@ -70,6 +80,7 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
     fun loadModel(model: ModelManager.ModelInfo) {
         viewModelScope.launch {
             try {
+                _loadingState.value = LoadingState.Loading(application.getString(R.string.loading_model, model.name))
                 // 创建聊天会话
                 llmService.createChatSession(
                     modelId = model.id,
@@ -79,8 +90,9 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
                 )
                 modelManager.updateModelLoadState(model.id, true)
             } catch (e: Exception) {
-                // TODO: 处理加载失败的情况
                 modelManager.updateModelLoadState(model.id, false)
+            } finally {
+                _loadingState.value = LoadingState.Idle
             }
         }
     }
@@ -88,11 +100,14 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
     fun unloadModel(model: ModelManager.ModelInfo) {
         viewModelScope.launch {
             try {
+                _loadingState.value = LoadingState.Loading(application.getString(R.string.unloading_model, model.name))
                 // 移除并释放会话
                 llmService.removeChatSession(model.id)
                 modelManager.updateModelLoadState(model.id, false)
             } catch (e: Exception) {
                 // TODO: 处理卸载失败的情况
+            } finally {
+                _loadingState.value = LoadingState.Idle
             }
         }
     }
@@ -117,5 +132,43 @@ class ModelListViewModel(application: Application) : AndroidViewModel(applicatio
         object Importing : ImportState()
         object Success : ImportState()
         data class Error(val message: String) : ImportState()
+    }
+
+    sealed class LoadingState {
+        object Idle : LoadingState()
+        data class Loading(val message: String) : LoadingState()
+    }
+
+    companion object {
+        /**
+         * 验证模型名称是否合法
+         * @param modelName 要验证的模型名称
+         * @return 如果名称合法返回true，否则返回false
+         */
+        private fun isValidModelName(modelName: String): Boolean {
+            // 检查是否为空
+            if (modelName.isBlank()) {
+                return false
+            }
+
+            // 检查长度限制（避免过长的文件名）
+            if (modelName.length > 255) {
+                return false
+            }
+
+            // 检查是否包含非法字符
+            val invalidChars = Regex("[\\\\/:*?\"<>|]")
+            if (invalidChars.containsMatchIn(modelName)) {
+                return false
+            }
+
+            // 检查是否以点或空格开头或结尾
+            if (modelName.startsWith(".") || modelName.endsWith(".") ||
+                modelName.startsWith(" ") || modelName.endsWith(" ")) {
+                return false
+            }
+
+            return true
+        }
     }
 } 

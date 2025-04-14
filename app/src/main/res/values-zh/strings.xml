@@ -34,4 +34,7 @@
     <string name="memory">内存</string>
     <string name="storage">存储</string>
     <string name="running_models">当前运行%d个模型</string>
+    <string name="invalid_model_name">模型名称不合法，请避免使用特殊字符</string>
+    <string name="loading_model">正在加载模型 %1$s</string>
+    <string name="unloading_model">正在卸载模型 %1$s</string>
 </resources> 

@@ -36,7 +36,9 @@ fun ModelListScreen(
 ) {
     val modelList by viewModel.modelList.collectAsState()
     val importState by viewModel.importState.collectAsState()
+    val loadingState by viewModel.loadingState.collectAsState()
     var showNameDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = SnackbarHostState()
     
     // 文件选择器
     val folderPicker = rememberLauncherForActivityResult(
@@ -59,7 +61,11 @@ fun ModelListScreen(
                 viewModel.resetImportState()
             }
             is ModelListViewModel.ImportState.Error -> {
-                // TODO: 显示错误提示
+                // 显示错误提示
+                snackbarHostState.showSnackbar(
+                    message = (importState as ModelListViewModel.ImportState.Error).message,
+                    duration = SnackbarDuration.Short
+                )
                 viewModel.resetImportState()
             }
             else -> {}
@@ -83,6 +89,15 @@ fun ModelListScreen(
                     Icons.Default.Add,
                     contentDescription = stringResource(R.string.import_model)
                 )
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    modifier = Modifier.padding(16.dp),
+                ) {
+                    Text(data.visuals.message)
+                }
             }
         }
     ) { paddingValues ->
@@ -116,12 +131,29 @@ fun ModelListScreen(
         }
         
         // 导入进度提示
-        if (importState is ModelListViewModel.ImportState.Importing) {
+        if (importState is ModelListViewModel.ImportState.Importing || 
+            loadingState is ModelListViewModel.LoadingState.Loading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = when {
+                            importState is ModelListViewModel.ImportState.Importing -> 
+                                stringResource(R.string.import_model)
+                            loadingState is ModelListViewModel.LoadingState.Loading -> 
+                                (loadingState as ModelListViewModel.LoadingState.Loading).message
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         }
     }

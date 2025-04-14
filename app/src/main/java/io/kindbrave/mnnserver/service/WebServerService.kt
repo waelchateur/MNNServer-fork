@@ -95,7 +95,7 @@ class WebServerService : Service() {
             webServer = MNNWebServer(port)
             webServer?.start()
             
-            _serverStatus.value = ServerStatus.Running(port)
+            _serverStatus.value = ServerStatus.Running
             addLog("服务已启动，端口: $port")
             
             startForeground(NOTIFICATION_ID, createNotification("服务运行中，端口: $port"))
@@ -122,7 +122,7 @@ class WebServerService : Service() {
     
     sealed class ServerStatus {
         object Stopped : ServerStatus()
-        data class Running(val port: Int) : ServerStatus()
+        object Running : ServerStatus()
         data class Error(val message: String) : ServerStatus()
     }
     

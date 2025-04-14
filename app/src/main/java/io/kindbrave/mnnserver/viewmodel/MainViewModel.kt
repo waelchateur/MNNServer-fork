@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Environment
 import android.os.IBinder
 import android.os.StatFs
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,33 +25,38 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
-    
-    private val context = application.applicationContext
-    private val modelManager = ModelManager(context)
-    private val llmService = LLMService.getInstance()
+class MainViewModel(private val application: Application) : AndroidViewModel(application) {
+
+    private val tag = MainViewModel::class.java.simpleName
+    private val modelManager = ModelManager.getInstance(application)
     private val settingsRepository = SettingsRepository(application)
     private val logRepository = LogRepository(application)
+
+    private val _serverStatus = MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
+    val serverStatus: StateFlow<WebServerService.ServerStatus> = _serverStatus.asStateFlow()
+
+    private val _serverPort = MutableStateFlow(8080)
+    val serverPort: StateFlow<Int> = _serverPort.asStateFlow()
+
+    private val _isServiceRunning = MutableStateFlow(false)
     
-    // WebServerService 绑定
+    private val _loadedModelsCount = MutableStateFlow(0)
+    val loadedModelsCount: StateFlow<Int> = _loadedModelsCount.asStateFlow()
+    
+    private val _deviceInfo = MutableStateFlow(DeviceInfo(0, 0, 0, 0))
+    val deviceInfo: StateFlow<DeviceInfo> = _deviceInfo.asStateFlow()
+
     private var webServerService: WebServerService? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as WebServerService.LocalBinder
             webServerService = binder.getService()
-            
+
             // 监听服务状态变化
             viewModelScope.launch {
                 webServerService?.serverStatus?.collect { status ->
                     _serverStatus.value = status
                     _isServiceRunning.value = status is WebServerService.ServerStatus.Running
-                }
-            }
-            
-            // 监听日志变化
-            viewModelScope.launch {
-                LogManager.logs.collect { logList ->
-                    _logs.value = logList
                 }
             }
         }
@@ -62,38 +68,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    // UI状态
-    private val _serverStatus = MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
-    val serverStatus: StateFlow<WebServerService.ServerStatus> = _serverStatus.asStateFlow()
-    
-    private val _modelList = MutableStateFlow<List<ModelManager.ModelInfo>>(emptyList())
-    val modelList: StateFlow<List<ModelManager.ModelInfo>> = _modelList.asStateFlow()
-
-    private val _logs = MutableStateFlow<List<String>>(emptyList())
-    val logs: StateFlow<List<String>> = _logs.asStateFlow()
-    
-    private val _serverPort = MutableStateFlow(8080)
-    val serverPort: StateFlow<Int> = _serverPort.asStateFlow()
-    
-    // 对话框状态
-    val showModelNameDialog = mutableStateOf(false)
-    val modelNameInput = mutableStateOf("")
-    private var pendingModelUri: Uri? = null
-    
-    private val _isServiceRunning = MutableStateFlow(false)
-    val isServiceRunning: StateFlow<Boolean> = _isServiceRunning.asStateFlow()
-    
-    private val _loadedModelsCount = MutableStateFlow(0)
-    val loadedModelsCount: StateFlow<Int> = _loadedModelsCount.asStateFlow()
-    
-    private val _deviceInfo = MutableStateFlow(DeviceInfo(0, 0, 0, 0))
-    val deviceInfo: StateFlow<DeviceInfo> = _deviceInfo.asStateFlow()
-    
     init {
         // 监听模型列表变化
         viewModelScope.launch {
             modelManager.modelList.collect { models ->
-                _modelList.value = models
                 _loadedModelsCount.value = models.count { it.isLoaded }
             }
         }
@@ -104,7 +82,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // 绑定WebServerService
         bindService()
         
         checkServiceStatus()
@@ -113,81 +90,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     private fun bindService() {
-        val intent = Intent(context, WebServerService::class.java)
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        val intent = Intent(application, WebServerService::class.java)
+        application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
     
     private fun unbindService() {
-        context.unbindService(serviceConnection)
+        application.unbindService(serviceConnection)
     }
     
     fun startServer() {
         viewModelScope.launch {
-            WebServerService.startService(context, _serverPort.value)
+            WebServerService.startService(application, _serverPort.value)
         }
     }
     
     fun stopServer() {
         viewModelScope.launch {
-            WebServerService.stopService(context)
-        }
-    }
-    
-    fun showModelNameDialog(uri: Uri) {
-        pendingModelUri = uri
-        modelNameInput.value = ""
-        showModelNameDialog.value = true
-    }
-    
-    fun importModel() {
-        // modelManager.importModel()
-    }
-    
-    fun importModelWithName(name: String) {
-        viewModelScope.launch {
-            //modelManager.importModelWithName(name)
-            logRepository.addLog("Model imported: $name")
-        }
-    }
-    
-    fun loadModel(model: ModelManager.ModelInfo) {
-        // modelManager.loadModel(model)
-    }
-    
-    fun unloadModel(model: ModelManager.ModelInfo) {
-        // modelManager.unloadModel(model)
-    }
-    
-    fun deleteModel(model: ModelManager.ModelInfo) {
-        // modelManager.deleteModel(model)
-    }
-    
-    fun addLog(message: String) {
-        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-            .format(java.util.Date())
-        val logMessage = "[$timestamp] $message"
-        LogManager.addLog(logMessage)
-    }
-    
-    fun clearLogs() {
-        viewModelScope.launch {
-            LogManager.clearLogs()
+            WebServerService.stopService(application)
         }
     }
     
     private fun checkServiceStatus() {
         viewModelScope.launch {
             _isServiceRunning.value = _serverStatus.value is WebServerService.ServerStatus.Running
-        }
-    }
-    
-    fun toggleService() {
-        viewModelScope.launch {
-            if (_isServiceRunning.value) {
-                stopService()
-            } else {
-                startService()
-            }
         }
     }
     

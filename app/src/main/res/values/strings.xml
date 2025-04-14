@@ -34,4 +34,7 @@
     <string name="memory">Memory</string>
     <string name="storage">Storage</string>
     <string name="running_models">Currently running %d models</string>
+    <string name="invalid_model_name">The model name is not valid. Please avoid using special characters</string>
+    <string name="loading_model">Loading model %1$s</string>
+    <string name="unloading_model">Unloading model %1$s</string>
 </resources>

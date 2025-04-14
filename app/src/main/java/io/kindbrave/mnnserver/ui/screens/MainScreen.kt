@@ -25,6 +25,7 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val serverStatus by viewModel.serverStatus.collectAsState()
+    val port by viewModel.serverPort.collectAsState()
     val loadedModelsCount by viewModel.loadedModelsCount.collectAsState()
     val deviceInfo by viewModel.deviceInfo.collectAsState()
     
@@ -63,6 +64,7 @@ fun MainScreen(
         ) {
             ServerStatusCard(
                 serverStatus = serverStatus,
+                port = port,
                 loadedModelsCount = loadedModelsCount,
                 onStartServer = { viewModel.startServer() },
                 onStopServer = { viewModel.stopServer() }
@@ -130,6 +132,7 @@ fun DeviceInfoCard(deviceInfo: DeviceInfo) {
 @Composable
 fun ServerStatusCard(
     serverStatus: WebServerService.ServerStatus,
+    port: Int,
     loadedModelsCount: Int,
     onStartServer: () -> Unit,
     onStopServer: () -> Unit
@@ -156,7 +159,7 @@ fun ServerStatusCard(
             Spacer(modifier = Modifier.height(8.dp))
             
             val statusText = when (serverStatus) {
-                is WebServerService.ServerStatus.Running -> stringResource(R.string.server_running, serverStatus.port)
+                is WebServerService.ServerStatus.Running -> stringResource(R.string.server_running, port)
                 is WebServerService.ServerStatus.Stopped -> stringResource(R.string.server_stopped)
                 is WebServerService.ServerStatus.Error -> stringResource(R.string.server_error, serverStatus.message)
             }

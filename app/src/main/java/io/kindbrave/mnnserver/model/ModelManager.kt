@@ -12,12 +12,11 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
-import androidx.core.net.toUri
 
-class ModelManager(private val context: Context) {
+class ModelManager private constructor(private val context: Context) {
     
     private val TAG = "ModelManager"
-    
+
     private val _modelList = MutableStateFlow<List<ModelInfo>>(emptyList())
     val modelList: StateFlow<List<ModelInfo>> = _modelList
     
@@ -43,7 +42,7 @@ class ModelManager(private val context: Context) {
                 isLoaded = false
             )
         } ?: emptyList()
-        
+
         _modelList.value = models
     }
     
@@ -53,12 +52,11 @@ class ModelManager(private val context: Context) {
                 _importProgress.value = ImportProgress.InProgress(0f)
                 
                 val modelId = UUID.randomUUID().toString()
-                val modelDir = File(getModelsDirectory(), modelId)
+                val modelDir = File(getModelsDirectory(), modelName)
                 if (!modelDir.exists()) {
                     modelDir.mkdirs()
                 }
-                
-                // 获取文件夹内容并复制
+
                 val docTree = context.contentResolver.getTreeDocumentUri(uri)
                 if (docTree != null) {
                     copyDirectory(docTree, modelDir)
@@ -119,21 +117,6 @@ class ModelManager(private val context: Context) {
     fun getModelsDirectory(): File {
         return File(context.filesDir, "models")
     }
-    
-    sealed class ImportProgress {
-        object Idle : ImportProgress()
-        data class InProgress(val progress: Float) : ImportProgress()
-        object Success : ImportProgress()
-        data class Error(val message: String) : ImportProgress()
-    }
-    
-    data class ModelInfo(
-        val id: String,
-        val name: String,
-        val path: String,
-        var isLoaded: Boolean = false
-    )
-
     
     private fun Context.getChildDocuments(parentUri: Uri): List<Uri> {
         val childDocs = mutableListOf<Uri>()
@@ -198,8 +181,6 @@ class ModelManager(private val context: Context) {
         }
     }
     
-    data class DocumentInfo(val name: String, val isDirectory: Boolean)
-    
     // 添加一个方法来更新模型的加载状态
     fun updateModelLoadState(modelId: String, isLoaded: Boolean) {
         _modelList.value = _modelList.value.map { model ->
@@ -219,5 +200,32 @@ class ModelManager(private val context: Context) {
     // 刷新模型列表
     fun refreshModels() {
         loadModels()
+    }
+
+    data class DocumentInfo(val name: String, val isDirectory: Boolean)
+
+    sealed class ImportProgress {
+        object Idle : ImportProgress()
+        data class InProgress(val progress: Float) : ImportProgress()
+        object Success : ImportProgress()
+        data class Error(val message: String) : ImportProgress()
+    }
+
+    data class ModelInfo(
+        val id: String,
+        val name: String,
+        val path: String,
+        var isLoaded: Boolean = false
+    )
+
+    companion object {
+        @Volatile
+        private var INSTANCE: ModelManager? = null
+
+        fun getInstance(context: Context): ModelManager {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: ModelManager(context.applicationContext).also { INSTANCE = it }
+            }
+        }
     }
 }
