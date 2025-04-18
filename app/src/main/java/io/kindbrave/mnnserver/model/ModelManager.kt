@@ -11,11 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.util.UUID
 
 class ModelManager private constructor(private val context: Context) {
     
-    private val TAG = "ModelManager"
+    private val tag = "ModelManager"
 
     private val _modelList = MutableStateFlow<List<ModelInfo>>(emptyList())
     val modelList: StateFlow<List<ModelInfo>> = _modelList
@@ -50,8 +49,7 @@ class ModelManager private constructor(private val context: Context) {
         return withContext(Dispatchers.IO) {
             try {
                 _importProgress.value = ImportProgress.InProgress(0f)
-                
-                val modelId = UUID.randomUUID().toString()
+
                 val modelDir = File(getModelsDirectory(), modelName)
                 if (!modelDir.exists()) {
                     modelDir.mkdirs()
@@ -62,13 +60,13 @@ class ModelManager private constructor(private val context: Context) {
                     copyDirectory(docTree, modelDir)
                     
                     val newModel = ModelInfo(
-                        id = modelId,
+                        id = modelName,
                         name = modelName,
                         path = modelDir.absolutePath,
                         isLoaded = false
                     )
-                    
-                    _modelList.value = _modelList.value + newModel
+
+                    _modelList.value += newModel
                     _importProgress.value = ImportProgress.Success
                     return@withContext true
                 } else {
@@ -76,7 +74,7 @@ class ModelManager private constructor(private val context: Context) {
                     return@withContext false
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "导入模型失败", e)
+                Log.e(tag, "导入模型失败", e)
                 _importProgress.value = ImportProgress.Error("导入失败: ${e.message}")
                 return@withContext false
             }
@@ -146,7 +144,7 @@ class ModelManager private constructor(private val context: Context) {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "获取子文档失败", e)
+            Log.e(tag, "获取子文档失败", e)
         }
         
         return childDocs

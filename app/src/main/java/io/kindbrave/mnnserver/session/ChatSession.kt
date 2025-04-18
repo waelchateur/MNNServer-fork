@@ -63,7 +63,7 @@ class ChatSession(
                 useTmpPath = useTmpPath,
                 isDiffusion = false,
                 isR1 = isR1Model,
-                backend = true,
+                backend = false,
                 sampler = sampler
             )
             

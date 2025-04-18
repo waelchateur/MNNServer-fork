@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.model.ModelManager
 import io.kindbrave.mnnserver.service.LLMService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,7 +79,7 @@ class ModelListViewModel(private val application: Application) : AndroidViewMode
     }
     
     fun loadModel(model: ModelManager.ModelInfo) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 _loadingState.value = LoadingState.Loading(application.getString(R.string.loading_model, model.name))
                 // 创建聊天会话
