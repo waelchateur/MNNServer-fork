@@ -37,4 +37,6 @@
     <string name="invalid_model_name">模型名称不合法，请避免使用特殊字符</string>
     <string name="loading_model">正在加载模型 %1$s</string>
     <string name="unloading_model">正在卸载模型 %1$s</string>
+    <string name="thinking_mode">深度思考</string>
+    <string name="no_thinking_mode">快速回答</string>
 </resources> 

@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.api.ApiHandler
 import io.kindbrave.mnnserver.utils.LogManager
 import io.kindbrave.mnnserver.webserver.KtorServer
 import kotlinx.coroutines.Dispatchers

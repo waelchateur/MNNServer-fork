@@ -5,7 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.kindbrave.mnnserver.ui.screens.*
-import io.kindbrave.mnnserver.viewmodel.*
+import io.kindbrave.mnnserver.ui.screens.model.ModelListScreen
 
 @Composable
 fun Navigation() {

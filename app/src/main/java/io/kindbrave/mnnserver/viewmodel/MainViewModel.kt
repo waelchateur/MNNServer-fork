@@ -77,9 +77,7 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
         }
 
         viewModelScope.launch {
-            settingsRepository.serverPort.collect { port ->
-                _serverPort.value = port
-            }
+            _serverPort.value = settingsRepository.getServerPort()
         }
 
         bindService()

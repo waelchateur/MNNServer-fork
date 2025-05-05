@@ -37,4 +37,6 @@
     <string name="invalid_model_name">The model name is not valid. Please avoid using special characters</string>
     <string name="loading_model">Loading model %1$s</string>
     <string name="unloading_model">Unloading model %1$s</string>
+    <string name="thinking_mode">Deep Thinking</string>
+    <string name="no_thinking_mode">No Deep Thinking</string>
 </resources>

@@ -1,11 +1,8 @@
 package io.kindbrave.mnnserver.webserver
 
 import android.util.Log
-import io.kindbrave.mnnserver.model.ChatDataItem
+import io.kindbrave.mnnserver.engine.MNN
 import io.kindbrave.mnnserver.service.LLMService
-import io.kindbrave.mnnserver.session.ChatSession
-import io.ktor.server.routing.RoutingCall
-import kotlinx.coroutines.isActive
 import kotlinx.io.IOException
 import org.json.JSONArray
 import org.json.JSONObject
@@ -80,7 +77,7 @@ class MNNHandler {
 
         runCatching {
             val history = buildChatHistory(messages)
-            chatSession.generate(history, object : ChatSession.GenerateProgressListener {
+            chatSession.generate(history, object : MNN.GenerateProgressListener {
                 override fun onProgress(progress: String?): Boolean {
                     return try {
                         if (progress == null) {
@@ -129,14 +126,14 @@ class MNNHandler {
         }
     }
 
-    private fun buildChatHistory(messages: JSONArray): java.util.ArrayList<ChatDataItem> {
-        val history = ArrayList<ChatDataItem>()
+    private fun buildChatHistory(messages: JSONArray): ArrayList<Pair<String, String>> {
+        val history = ArrayList<Pair<String, String>>()
 
         for (i in 0 until messages.length()) {
             val message = messages.getJSONObject(i)
             val role = message.optString("role", "")
             val content = message.optString("content", "")
-            history.add(ChatDataItem(role, content))
+            history.add(Pair(role, content))
         }
 
         return history

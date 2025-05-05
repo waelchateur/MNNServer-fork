@@ -86,7 +86,6 @@ class ModelListViewModel(private val application: Application) : AndroidViewMode
                 llmService.createChatSession(
                     modelId = model.id,
                     modelDir = model.path,
-                    useTmpPath = true,
                     sessionId = model.id
                 )
                 modelManager.updateModelLoadState(model.id, true)

@@ -11,8 +11,6 @@
 #include <sstream>
 #include <mutex>
 #include <ostream>
-#include "llm/llm.hpp"
-
 #include <sstream>
 #include <mutex>
 #include <string>
@@ -21,95 +19,13 @@
 #include "mls_log.h"
 #include "MNN/expr/ExecutorScope.hpp"
 #include "nlohmann/json.hpp"
+#include "llm_stream_buffer.hpp"
+#include "utf8_stream_processor.hpp"
+#include "llm_session.h"
 
 using MNN::Transformer::Llm;
 using mls::DiffusionSession;
 using json = nlohmann::json;
-
-class MNN_PUBLIC LlmStreamBuffer : public std::streambuf {
-public:
-    using CallBack = std::function<void(const char* str, size_t len)>;;
-    explicit LlmStreamBuffer(CallBack callback) : callback_(std::move(callback)) {}
-
-protected:
-    std::streamsize xsputn(const char* s, std::streamsize n) override {
-        if (callback_) {
-            callback_(s, n);
-        }
-        return n;
-    }
-
-private:
-    CallBack callback_ = nullptr;
-};
-
-using PromptItem = std::pair<std::string, std::string>;
-static std::vector<PromptItem> history{};
-static bool stop_requested = false;
-static bool is_r1 = false;
-static bool s_is_diffusion = false;
-static std::string prompt_string_for_debug{};
-static std::string response_string_for_debug{};
-
-std::string trimLeadingWhitespace(const std::string& str) {
-    auto it = std::find_if(str.begin(), str.end(), [](unsigned char ch) {
-        return !std::isspace(ch); // Find the first non-whitespace character
-    });
-    return std::string(it, str.end()); // Create a substring from the first non-whitespace character
-}
-int utf8CharLength(unsigned char byte) {
-    if ((byte & 0x80) == 0) return 1;
-    if ((byte & 0xE0) == 0xC0) return 2;
-    if ((byte & 0xF0) == 0xE0) return 3;
-    if ((byte & 0xF8) == 0xF0) return 4;
-    return 0;
-}
-
-class Utf8StreamProcessor {
-public:
-    explicit Utf8StreamProcessor(std::function<void(const std::string&)> callback)
-            : callback(std::move(callback)) {}
-
-    void processStream(const char* str, size_t len) {
-        utf8Buffer.append(str, len);
-
-        size_t i = 0;
-        std::string completeChars;
-        while (i < utf8Buffer.size()) {
-            int length = utf8CharLength(static_cast<unsigned char>(utf8Buffer[i]));
-            if (length == 0 || i + length > utf8Buffer.size()) {
-                break;
-            }
-            completeChars.append(utf8Buffer, i, length);
-            i += length;
-        }
-        utf8Buffer = utf8Buffer.substr(i);
-        if (!completeChars.empty()) {
-            callback(completeChars);
-        }
-    }
-
-private:
-    std::string utf8Buffer;
-    std::function<void(const std::string&)> callback;
-};
-
-//for_history true for insert to history, false for submit prompt
-const char* getUserString(const char* user_content, bool for_history) {
-    if (is_r1) {
-        return ("<|User|>" + std::string(user_content) + "<|Assistant|>" + (for_history ? "" : "<think>\n")).c_str();
-    } else {
-        return user_content;
-    }
-}
-
-const std::string getR1AssistantString(std::string assistant_content) {
-    std::size_t pos = assistant_content.find("</think>");
-    if (pos != std::string::npos) {
-        assistant_content.erase(0, pos + std::string("</think>").length());
-    }
-    return trimLeadingWhitespace(assistant_content) + "<|end_of_sentence|>";
-}
 
 extern "C" {
 
@@ -122,159 +38,99 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
     __android_log_print(ANDROID_LOG_DEBUG, "MNN_DEBUG", "JNI_OnUnload");
 }
 
-JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_session_MNN_initNative(JNIEnv* env, jobject thiz,
-                                                                               jstring rootCacheDir,
-                                                                               jstring modelId,
-                                                                               jstring modelDir,
-                                                                               jboolean use_tmp_path,
-                                                                               jstring configJsonStr) {
-    const char* config_json_cstr = env->GetStringUTFChars(configJsonStr, nullptr);
-    json configJson = json::parse(config_json_cstr);
-    bool is_diffusion = configJson["is_diffusion"];
-    is_r1 = configJson["is_r1"];
-    std::string diffusion_memory_mode = configJson["diffusion_memory_mode"];
-    std::string sampler = configJson["sampler"];
-    s_is_diffusion = is_diffusion;
-    const char* root_cache_dir = env->GetStringUTFChars(rootCacheDir, nullptr);
-    const char* model_id = env->GetStringUTFChars(modelId, nullptr);
-    std::string new_model_id(model_id);
+JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_engine_MNN_initNative(JNIEnv* env,
+                                                                                    jobject thiz,
+                                                                                    jstring modelDir,
+                                                                                    jstring mergeConfigStr,
+                                                                                    jstring configJsonStr) {
     const char* model_dir = env->GetStringUTFChars(modelDir, nullptr);
     auto model_dir_str = std::string(model_dir);
-    std::string root_cache_dir_str = std::string(root_cache_dir);
-    env->ReleaseStringUTFChars(modelId, model_id);
+    const char* config_json_cstr = env->GetStringUTFChars(configJsonStr, nullptr);
+    const char* merged_config_cstr = env->GetStringUTFChars(mergeConfigStr, nullptr);
+    json merged_config  = json::parse(merged_config_cstr);
+    json extra_json_config = json::parse(config_json_cstr);
+    bool is_diffusion = extra_json_config["is_diffusion"];
     env->ReleaseStringUTFChars(modelDir, model_dir);
-    env->ReleaseStringUTFChars(rootCacheDir, root_cache_dir);
     env->ReleaseStringUTFChars(configJsonStr, config_json_cstr);
-    MNN_DEBUG("createLLM BeginLoad %s", model_dir);
+    env->ReleaseStringUTFChars(mergeConfigStr, merged_config_cstr);
     if (is_diffusion) {
+        std::string diffusion_memory_mode = extra_json_config["diffusion_memory_mode"];
         int diffusion_memory_mode_int = std::stoi(diffusion_memory_mode);
         auto diffusion = new DiffusionSession(model_dir, diffusion_memory_mode_int);
         return reinterpret_cast<jlong>(diffusion);
     }
-    bool use_mmap = !root_cache_dir_str.empty();
-    MNN::BackendConfig backendConfig;
-    auto executor = MNN::Express::Executor::newExecutor(MNN_FORWARD_CPU, backendConfig, 1);
-    MNN::Express::ExecutorScope s(executor);
-    auto llm = Llm::createLLM(model_dir_str);
-    json extra_config;
-    extra_config["use_mmap"] = use_mmap;
-    if (use_mmap) {
-        std::string temp_dir = root_cache_dir_str;
-        extra_config["tmp_path"] = temp_dir;
-    }
-    if (is_r1) {
-        extra_config["use_template"] = false;
-        extra_config["precision"] = "high";
-    }
-    extra_config["sampler_type"] = sampler;
-    auto extra_config_str = extra_config.dump();
-    MNN_DEBUG("extra_config: %s", extra_config_str.c_str());
-    llm->set_config(extra_config_str);
-    MNN_DEBUG("dumped config: %s", llm->dump_config().c_str());
+    MNN_DEBUG("createLLM BeginLoad %s", model_dir);
+    std::vector<std::string> history;
     history.clear();
-    history.emplace_back("system", is_r1 ? "<|begin_of_sentence|>You are a helpful assistant." : "You are a helpful assistant.");
-    llm->load();
-    MNN_DEBUG("createLLM EndLoad %ld ", reinterpret_cast<jlong>(llm));
-    return reinterpret_cast<jlong>(llm);
+    auto llm_session = new mls::LlmSession(model_dir_str, merged_config, extra_json_config, history);
+    llm_session->Load();
+    MNN_DEBUG("createLLM EndLoad %ld ", reinterpret_cast<jlong>(llm_session));
+    return reinterpret_cast<jlong>(llm_session);
 }
 
 
-JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_session_MNN_submitNative(JNIEnv* env, jobject thiz,
+JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNN_submitNative(JNIEnv* env,
+                                                                                   jobject thiz,
                                                                                    jlong llmPtr,
                                                                                    jobject chatHistory,
-                                                                                   jobject progressListener) {
-    Llm* llm = reinterpret_cast<Llm*>(llmPtr);
+                                                                                   jobject
+                                                                                   progressListener) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(llmPtr);
     if (!llm) {
         return env->NewStringUTF("Failed, Chat is not ready!");
     }
-    prompt_string_for_debug.clear();
-    response_string_for_debug.clear();
-    stop_requested = false;
-
-    // 清空历史记录，准备添加新的对话内容
-    history.resize(1);
-
-    // 处理传入的chatHistory列表
-    jclass listClass = env->GetObjectClass(chatHistory);
-    jmethodID sizeMethod = env->GetMethodID(listClass, "size", "()I");
-    jmethodID getMethod = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
-
-    jint size = env->CallIntMethod(chatHistory, sizeMethod);
-
-    // 获取ChatDataItem类的信息
-    jclass chatDataItemClass = env->FindClass("io/kindbrave/mnnserver/model/ChatDataItem");
-    jmethodID getRoleMethod = env->GetMethodID(chatDataItemClass, "getRole", "()Ljava/lang/String;");
-    jmethodID getTextMethod = env->GetMethodID(chatDataItemClass, "getText", "()Ljava/lang/String;");
-
-    // 遍历chatHistory列表，将每个ChatDataItem添加到history中
-    for (jint i = 0; i < size; i++) {
-        jobject item = env->CallObjectMethod(chatHistory, getMethod, i);
-        jstring jRole = (jstring)env->CallObjectMethod(item, getRoleMethod);
-        jstring jText = (jstring)env->CallObjectMethod(item, getTextMethod);
-
-        const char* role = env->GetStringUTFChars(jRole, nullptr);
-        const char* text = env->GetStringUTFChars(jText, nullptr);
-
-        // 根据角色类型处理文本
-        if (strcmp(role, "user") == 0) {
-            history.emplace_back("user", getUserString(text, false));
-        } else if (strcmp(role, "assistant") == 0) {
-            history.emplace_back("assistant", text);
-        }
-
-        // 释放资源
-        env->ReleaseStringUTFChars(jRole, role);
-        env->ReleaseStringUTFChars(jText, text);
-        env->DeleteLocalRef(item);
-        env->DeleteLocalRef(jRole);
-        env->DeleteLocalRef(jText);
-    }
-
-    std::stringstream response_buffer;
     jclass progressListenerClass = env->GetObjectClass(progressListener);
     jmethodID onProgressMethod = env->GetMethodID(progressListenerClass, "onProgress", "(Ljava/lang/String;)Z");
     if (!onProgressMethod) {
         MNN_DEBUG("ProgressListener onProgress method not found.");
     }
-    Utf8StreamProcessor processor([&response_buffer, env, progressListener, onProgressMethod](const std::string& utf8Char) {
-        bool is_eop = utf8Char.find("<eop>") != std::string::npos;
-        if (!is_eop) {
-            response_buffer << utf8Char;
-        } else {
-            std::string response_result =  response_buffer.str();
-            MNN_DEBUG("submitNative Result %s", response_result.c_str());
-            response_string_for_debug = response_result;
-            if (is_r1) {
-                auto& last_message = history.at(history.size() - 1);
-                std::size_t user_think_pos = last_message.second.find("<think>\n");
-                if (user_think_pos != std::string::npos) {
-                    last_message.second.erase(user_think_pos, std::string("<think>\n").length());
-                }
-                response_result = getR1AssistantString(response_result);
-            }
-            history.emplace_back("assistant", response_result);
-        }
+
+    std::vector<std::pair<std::string, std::string>> history;
+
+    if (!chatHistory) {
+        return env->NewStringUTF("Failed, ChatHistory is not ready!");
+    }
+
+    // 获取 List 类和方法
+    jclass listClass = env->GetObjectClass(chatHistory);
+    jmethodID sizeMethod = env->GetMethodID(listClass, "size", "()I");
+    jmethodID getMethod = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
+    jint size = env->CallIntMethod(chatHistory, sizeMethod);
+
+    // 获取 android.util.Pair 类和字段
+    jclass pairClass = env->FindClass("kotlin/Pair");
+    jfieldID firstField = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
+    jfieldID secondField = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
+
+    for (jint i = 0; i < size; ++i) {
+        jobject pairObj = env->CallObjectMethod(chatHistory, getMethod, i);
+        if (!pairObj) continue;
+
+        jstring jfirst = (jstring)env->GetObjectField(pairObj, firstField);
+        jstring jsecond = (jstring)env->GetObjectField(pairObj, secondField);
+
+        const char* firstStr = env->GetStringUTFChars(jfirst, nullptr);
+        const char* secondStr = env->GetStringUTFChars(jsecond, nullptr);
+
+        history.emplace_back(firstStr, secondStr);
+
+        env->ReleaseStringUTFChars(jfirst, firstStr);
+        env->ReleaseStringUTFChars(jsecond, secondStr);
+        env->DeleteLocalRef(jfirst);
+        env->DeleteLocalRef(jsecond);
+        env->DeleteLocalRef(pairObj);
+    }
+
+    auto* context = llm->Response(history, [&, progressListener, onProgressMethod](const std::string& response, bool is_eop) {
         if (progressListener && onProgressMethod) {
-            jstring javaString = is_eop ? nullptr : env->NewStringUTF(utf8Char.c_str());
+            jstring javaString = is_eop ? nullptr : env->NewStringUTF(response.c_str());
             jboolean user_stop_requested = env->CallBooleanMethod(progressListener, onProgressMethod,  javaString);
-            stop_requested = is_eop || user_stop_requested;
             env->DeleteLocalRef(javaString);
+            return (bool)user_stop_requested;
+        } else {
+            return true;
         }
     });
-    LlmStreamBuffer stream_buffer{[&processor](const char* str, size_t len){
-        processor.processStream(str, len);
-    }};
-    std::ostream output_ostream(&stream_buffer);
-    MNN_DEBUG("submitNative history count %zu", history.size());
-    for (auto iter= history.begin(); iter != history.end(); ++iter) {
-        prompt_string_for_debug += iter->second;
-    }
-    MNN_DEBUG("submitNative prompt_string_for_debug count %s", prompt_string_for_debug.c_str());
-    llm->response(history, &output_ostream, "<eop>", 1);
-    while (!stop_requested) {
-        llm->generate(1);
-    }
-    auto context = llm->getContext();
     int64_t prompt_len = 0;
     int64_t decode_len = 0;
     int64_t vision_time = 0;
@@ -302,26 +158,56 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_session_MNN_submitNative(J
     return hashMap;
 }
 
-
-JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_session_MNN_resetNative(JNIEnv* env, jobject thiz, jlong llmPtr) {
-    if (s_is_diffusion) {
+JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_resetNative(JNIEnv* env,
+                                                                               jobject thiz,
+                                                                               jlong object_ptr,
+                                                                               jboolean is_diffusion) {
+    if (is_diffusion) {
         return;
     }
-    history.resize(1);
-    Llm* llm = reinterpret_cast<Llm*>(llmPtr);
+    auto* llm = reinterpret_cast<mls::LlmSession*>(object_ptr);
     if (llm) {
         MNN_DEBUG("RESET");
-        llm->reset();
+        llm->Reset();
     }
 }
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_io_kindbrave_mnnserver_session_MNN_getDebugInfoNative(JNIEnv *env, jobject thiz, jlong objecPtr) {
-    return env->NewStringUTF(("last_prompt:\n" + prompt_string_for_debug + "\nlast_response:\n" + response_string_for_debug).c_str());
+JNIEXPORT jboolean JNICALL
+Java_io_kindbrave_mnnserver_engine_MNN_setWavformCallbackNative(
+        JNIEnv *env, jobject thiz, jlong instance_id, jobject listener) {
+
+    if (instance_id == 0 || !listener) {
+        return JNI_FALSE;
+    }
+    auto *session = reinterpret_cast<mls::LlmSession *>(instance_id);
+    jobject global_ref = env->NewGlobalRef(listener);
+    session->SetWavformCallback([env, global_ref](const float* data, size_t size, bool is_end) -> bool {
+        jclass listenerClass = env->GetObjectClass(global_ref);
+        jmethodID onAudioDataMethod = env->GetMethodID(listenerClass, "onAudioData", "([FZ)Z");
+        jfloatArray audioDataArray = env->NewFloatArray(size);
+        env->SetFloatArrayRegion(audioDataArray, 0, size, data);
+        jboolean result = env->CallBooleanMethod(global_ref, onAudioDataMethod, audioDataArray, is_end);
+        env->DeleteLocalRef(audioDataArray);
+        env->DeleteLocalRef(listenerClass);
+
+        return result == JNI_TRUE;
+    });
+
+    return JNI_TRUE;
 }
 
-JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_session_MNN_releaseNative(JNIEnv* env,
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_io_kindbrave_mnnserver_engine_MNN_getDebugInfoNative(JNIEnv *env, jobject thiz, jlong objecPtr) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(objecPtr);
+    if (llm == nullptr) {
+        return env->NewStringUTF("");
+    }
+    return env->NewStringUTF(llm->getDebugInfo().c_str());
+}
+
+JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_releaseNative(JNIEnv* env,
                                                                                       jobject thiz,
                                                                                       jlong objecPtr,
                                                                                       jboolean isDiffusion) {
@@ -330,13 +216,13 @@ JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_session_MNN_releaseNative(JNI
         auto* diffusion = reinterpret_cast<DiffusionSession*>(objecPtr);
         delete diffusion;
     } else {
-        Llm* llm = reinterpret_cast<Llm*>(objecPtr);
+        auto* llm = reinterpret_cast<mls::LlmSession*>(objecPtr);
         delete llm;
     }
 }
 
 JNIEXPORT jobject JNICALL
-Java_io_kindbrave_mnnserver_session_MNN_submitDiffusionNative(JNIEnv *env, jobject thiz,
+Java_io_kindbrave_mnnserver_engine_MNN_submitDiffusionNative(JNIEnv *env, jobject thiz,
                                                                        jlong instance_id,
                                                                        jstring input,
                                                                        jstring joutput_path,
@@ -375,4 +261,40 @@ Java_io_kindbrave_mnnserver_session_MNN_submitDiffusionNative(JNIEnv *env, jobje
     env->CallObjectMethod(hashMap, putMethod, env->NewStringUTF("total_timeus"), env->NewObject(env->FindClass("java/lang/Long"), env->GetMethodID(env->FindClass("java/lang/Long"), "<init>", "(J)V"), duration));
     return hashMap;
 }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_io_kindbrave_mnnserver_engine_MNN_updateMaxNewTokensNative(JNIEnv *env, jobject thiz,
+                                                                     jlong llm_ptr,
+                                                                     jint max_new_tokens) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
+    if (llm) {
+        llm->SetMaxNewTokens(max_new_tokens);
+    }
+
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_io_kindbrave_mnnserver_engine_MNN_updateSystemPromptNative(JNIEnv *env, jobject thiz,
+                                                                     jlong llm_ptr,
+                                                                     jstring system_promp_j) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
+    const char* system_prompt_cstr = env->GetStringUTFChars(system_promp_j, nullptr);
+    if (llm) {
+        llm->setSystemPrompt(system_prompt_cstr);
+    }
+    env->ReleaseStringUTFChars(system_promp_j, system_prompt_cstr);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_io_kindbrave_mnnserver_engine_MNN_updateAssistantPromptNative(JNIEnv *env, jobject thiz,
+                                                                        jlong llm_ptr,
+                                                                        jstring assistant_prompt_j) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
+    const char* assistant_prompt_cstr = env->GetStringUTFChars(assistant_prompt_j, nullptr);
+    if (llm) {
+        llm->SetAssistantPrompt(assistant_prompt_cstr);
+    }
+    env->ReleaseStringUTFChars(assistant_prompt_j, assistant_prompt_cstr);
 }

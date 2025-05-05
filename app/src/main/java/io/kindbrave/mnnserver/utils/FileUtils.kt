@@ -17,11 +17,10 @@ import java.nio.file.Files
 object FileUtils {
     const val TAG: String = "FileUtils"
     fun getAudioDuration(audioFilePath: String?): Long {
-        val mmr: MediaMetadataRetriever = MediaMetadataRetriever()
+        val mmr = MediaMetadataRetriever()
         try {
             mmr.setDataSource(audioFilePath)
-            val durationStr: String? =
-                mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             return if (durationStr != null) durationStr.toLong() / 1000 else -1
         } catch (e: Exception) {
             Log.e(TAG, "", e)
@@ -35,44 +34,45 @@ object FileUtils {
         }
     }
 
-    fun generateDestDiffusionFilePath(context: Context, sessionId: String?): String {
+    fun generateDestDiffusionFilePath(context: Context, sessionId: String): String {
         return generateDestFilePathKindOf(context, sessionId, "diffusion", "jpg")
     }
 
-    fun generateDestPhotoFilePath(context: Context, sessionId: String?): String {
+    fun generateDestPhotoFilePath(context: Context, sessionId: String): String {
         return generateDestFilePathKindOf(context, sessionId, "photo", "jpg")
     }
 
-    fun generateDestAudioFilePath(context: Context, sessionId: String?): String {
+    fun generateDestAudioFilePath(context: Context, sessionId: String): String {
         return generateDestFilePathKindOf(context, sessionId, "audio", "wav")
     }
 
-    fun generateDestRecordFilePath(context: Context, sessionId: String?): String {
+    fun generateDestRecordFilePath(context: Context, sessionId: String): String {
         return generateDestFilePathKindOf(context, sessionId, "record", "wav")
     }
 
-    fun generateDestImageFilePath(context: Context, sessionId: String?): String {
+    fun generateDestImageFilePath(context: Context, sessionId: String): String {
         return generateDestFilePathKindOf(context, sessionId, "image", "jpg")
     }
 
     private fun generateDestFilePathKindOf(
         context: Context,
-        sessionId: String?,
-        kind: String?,
-        extension: String?
+        sessionId: String,
+        kind: String,
+        extension: String
     ): String {
-        val path = context.getFilesDir()
-            .getAbsolutePath() + "/" + sessionId + "/" + kind + "_" + System.currentTimeMillis() + "." + extension
+        val path =
+            context.filesDir.absolutePath + "/history/" + sessionId + "/" + kind + "_" + System.currentTimeMillis() + "." + extension
         ensureParentDirectoriesExist(File(path))
         return path
     }
 
-    fun getSessionResourceBasePath(context: Context, sessionId: String?): String {
-        return context.getFilesDir().getAbsolutePath() + "/" + sessionId
+    @JvmStatic
+    fun getSessionResourceBasePath(context: Context, sessionId: String): String {
+        return context.filesDir.absolutePath + "/" + sessionId
     }
 
     fun ensureParentDirectoriesExist(file: File) {
-        val parentDir = file.getParentFile()
+        val parentDir = file.parentFile
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs()
         }
@@ -84,7 +84,7 @@ object FileUtils {
         var outputStream: OutputStream? = null
         try {
             // Open an InputStream from the Uri
-            inputStream = context.getContentResolver().openInputStream(fileUri)
+            inputStream = context.contentResolver.openInputStream(fileUri)
             requireNotNull(inputStream) { "Unable to open InputStream from Uri" }
             // Create the destination file
             val destinationFile = File(destFilePath)
@@ -102,11 +102,11 @@ object FileUtils {
             return destinationFile
         } finally {
             try {
-                if (inputStream != null) inputStream.close()
+                inputStream?.close()
             } catch (ignored: Exception) {
             }
             try {
-                if (outputStream != null) outputStream.close()
+                outputStream?.close()
             } catch (ignored: Exception) {
             }
         }
@@ -133,14 +133,25 @@ object FileUtils {
     }
 
     fun getMmapDir(modelId: String, isModelScope: Boolean): String {
-        var rootCacheDir: String =
-             "${ApplicationProvider.get().filesDir}/tmps/${ModelUtils.safeModelId(modelId)}"
+        var rootCacheDir =
+            ApplicationProvider.get().filesDir.toString() + "/tmps/" + ModelUtils.safeModelId(
+                modelId
+            )
         if (isModelScope) {
             rootCacheDir = "$rootCacheDir/modelscope"
         }
         return rootCacheDir
     }
 
+    fun getModelConfigDir(modelId: String): String {
+        val rootCacheDir =
+            ApplicationProvider.get().filesDir.toString() + "/configs/" + ModelUtils.safeModelId(
+                modelId
+            )
+        return rootCacheDir
+    }
+
+    @JvmStatic
     fun clearMmapCache(modelId: String) {
         DownloadFileUtils.deleteDirectoryRecursively(File(getMmapDir(modelId, true)))
         DownloadFileUtils.deleteDirectoryRecursively(File(getMmapDir(modelId, false)))

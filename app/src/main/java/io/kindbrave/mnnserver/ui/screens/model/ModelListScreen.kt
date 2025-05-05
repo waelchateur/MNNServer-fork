@@ -1,9 +1,8 @@
-package io.kindbrave.mnnserver.ui.screens
+package io.kindbrave.mnnserver.ui.screens.model
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,12 +11,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -216,6 +214,7 @@ fun ModelItem(
     onUnloadModel: (ModelManager.ModelInfo) -> Unit,
     onDeleteModel: (ModelManager.ModelInfo) -> Unit
 ) {
+    var showModelConfigDialog by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -254,7 +253,14 @@ fun ModelItem(
             TextButton(onClick = { onLoadModel(model) }) {
                 Text(stringResource(R.string.load))
             }
-            
+            IconButton(onClick = {
+                showModelConfigDialog = true
+            }) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.settings),
+                )
+            }
             IconButton(onClick = { onDeleteModel(model) }) {
                 Icon(
                     Icons.Default.Delete,
@@ -264,4 +270,10 @@ fun ModelItem(
             }
         }
     }
-} 
+
+    if (showModelConfigDialog) {
+        ModelConfigBottomSheet(model.id, model.path, {
+            showModelConfigDialog = false
+        })
+    }
+}
