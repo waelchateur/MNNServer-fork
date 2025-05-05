@@ -13,23 +13,27 @@ import androidx.core.app.NotificationCompat
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.api.ApiHandler
 import io.kindbrave.mnnserver.utils.LogManager
+import io.kindbrave.mnnserver.webserver.KtorServer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.nanohttpd.protocols.http.IHTTPSession
 import org.nanohttpd.protocols.http.NanoHTTPD
 import org.nanohttpd.protocols.http.response.Response
 import java.io.IOException
+import java.io.InputStream
 
 class WebServerService : Service() {
-    
     private val TAG = "WebServerService"
     private val NOTIFICATION_ID = 1001
     private val CHANNEL_ID = "mnn_server_channel"
-    
-    private var webServer: MNNWebServer? = null
+
+    private lateinit var server: KtorServer
+
     private val binder = LocalBinder()
-    private lateinit var llmService: LLMService
-    private lateinit var apiHandler: ApiHandler
     
     private val _serverStatus = MutableStateFlow<ServerStatus>(ServerStatus.Stopped)
     val serverStatus: StateFlow<ServerStatus> = _serverStatus
@@ -50,8 +54,6 @@ class WebServerService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        llmService = LLMService.getInstance()
-        apiHandler = ApiHandler(llmService)
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -86,18 +88,13 @@ class WebServerService : Service() {
     }
     
     fun startServer(port: Int) {
-        if (webServer != null) {
-            addLog("服务已经在运行，端口: $port")
-            return
-        }
-        
         try {
-            webServer = MNNWebServer(port)
-            webServer?.start()
-            
+            server = KtorServer(port)
+            server.start()
+
             _serverStatus.value = ServerStatus.Running
             addLog("服务已启动，端口: $port")
-            
+
             startForeground(NOTIFICATION_ID, createNotification("服务运行中，端口: $port"))
         } catch (e: IOException) {
             _serverStatus.value = ServerStatus.Error("启动服务失败: ${e.message}")
@@ -107,8 +104,9 @@ class WebServerService : Service() {
     }
     
     fun stopServer() {
-        webServer?.stop()
-        webServer = null
+        if (::server.isInitialized) {
+            server.stop()
+        }
         _serverStatus.value = ServerStatus.Stopped
         addLog("服务已停止")
         stopForeground(true)
@@ -126,23 +124,26 @@ class WebServerService : Service() {
         data class Error(val message: String) : ServerStatus()
     }
     
-    private inner class MNNWebServer(port: Int) : NanoHTTPD(port) {
-        override fun serve(session: IHTTPSession): Response {
-            val uri = session.uri
-            val method = session.method
-
-            Log.e(TAG, "收到请求: $method $uri")
-            addLog("收到请求: $method $uri")
-            
-            // 使用 ApiHandler 处理 API 请求
-            if (uri.startsWith("/v1")) {
-                return apiHandler.handleRequest(session)
-            }
-            
-            // 处理非 API 请求
-            return Response.newFixedLengthResponse("MNN Server is running")
-        }
-    }
+//    private inner class MNNWebServer(port: Int) : NanoHTTPD(port) {
+//        private val scope = MainScope()
+//        override fun serve(session: IHTTPSession): Response {
+//            scope.launch(Dispatchers.IO) {
+//
+//            }
+//            val uri = session.uri
+//            val method = session.method
+//
+//            addLog("收到请求: $method $uri")
+//
+//            // 使用 ApiHandler 处理 API 请求
+//            if (uri.startsWith("/v1")) {
+//                return apiHandler.handleRequest(session)
+//            }
+//
+//            // 处理非 API 请求
+//            return Response.newFixedLengthResponse("MNN Server is running")
+//        }
+//    }
     
     companion object {
         const val ACTION_START_SERVER = "io.kindbrave.mnnserver.action.START_SERVER"

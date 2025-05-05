@@ -122,14 +122,12 @@ class ApiHandler(private val llmService: LLMService) {
         }
         
         // 获取会话
-        var chatSession = llmService.getChatSession(modelId)
-        if (chatSession == null) {
-            return Response.newFixedLengthResponse(
+        val chatSession = llmService.getChatSession(modelId)
+            ?: return Response.newFixedLengthResponse(
                 Status.BAD_REQUEST,
                 "application/json",
                 "{\"error\":{\"message\":\"Session Not Found\",\"type\":\"invalid_request_error\",\"code\":\"400\"}}"
             )
-        }
 
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
@@ -174,7 +172,6 @@ class ApiHandler(private val llmService: LLMService) {
                                     chunkedOutputStream.write(doneEvent.toByteArray())
                                     chunkedOutputStream.flush()
                                     chunkedOutputStream.close()
-                                    
                                     return true
                                 } else {
                                     // 构建流式响应格式

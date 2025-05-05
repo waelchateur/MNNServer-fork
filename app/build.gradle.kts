@@ -47,6 +47,10 @@ android {
             version = "3.22.1"
         }
     }
+    packaging {
+        resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/io.netty.versions.properties")
+    }
 }
 
 dependencies {
@@ -66,6 +70,9 @@ dependencies {
     implementation(fileTree("libs"))
     // Kotlin协程
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.call.logging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

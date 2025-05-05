@@ -5,14 +5,11 @@ import io.kindbrave.mnnserver.session.ChatSession.GenerateProgressListener
 
 class MNN {
     external fun initNative(
-        rootCacheDir: String?,
-        modelId: String?,
-        configPath: String?,
+        rootCacheDir: String,
+        modelId: String,
+        configPath: String,
         useTmpPath: Boolean,
-        isDiffusion: Boolean,
-        isR1: Boolean,
-        backend: Boolean,
-        sampler: String?
+        configJsonStr: String,
     ): Long
 
     external fun submitNative(

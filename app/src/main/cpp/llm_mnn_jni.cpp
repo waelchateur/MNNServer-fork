@@ -20,9 +20,11 @@
 #include <chrono>
 #include "mls_log.h"
 #include "MNN/expr/ExecutorScope.hpp"
+#include "nlohmann/json.hpp"
 
 using MNN::Transformer::Llm;
 using mls::DiffusionSession;
+using json = nlohmann::json;
 
 class MNN_PUBLIC LlmStreamBuffer : public std::streambuf {
 public:
@@ -121,30 +123,32 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
 }
 
 JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_session_MNN_initNative(JNIEnv* env, jobject thiz,
-                                                                                    jstring rootCacheDir,
-                                                                                    jstring modelId,
-                                                                                    jstring modelDir,
-                                                                                    jboolean use_tmp_path,
-                                                                                    jboolean is_diffusion,
-                                                                                    jboolean r1,
-                                                                                    jboolean backend,
-                                                                                    jstring sampler) {
+                                                                               jstring rootCacheDir,
+                                                                               jstring modelId,
+                                                                               jstring modelDir,
+                                                                               jboolean use_tmp_path,
+                                                                               jstring configJsonStr) {
+    const char* config_json_cstr = env->GetStringUTFChars(configJsonStr, nullptr);
+    json configJson = json::parse(config_json_cstr);
+    bool is_diffusion = configJson["is_diffusion"];
+    is_r1 = configJson["is_r1"];
+    std::string diffusion_memory_mode = configJson["diffusion_memory_mode"];
+    std::string sampler = configJson["sampler"];
     s_is_diffusion = is_diffusion;
-    is_r1 = r1;
-    bool use_opencl = backend;
-    std::string sp = std::string(env->GetStringUTFChars(sampler, 0));
-    const char* root_cache_dir = env->GetStringUTFChars(rootCacheDir, 0);
-    const char* model_id = env->GetStringUTFChars(modelId, 0);
+    const char* root_cache_dir = env->GetStringUTFChars(rootCacheDir, nullptr);
+    const char* model_id = env->GetStringUTFChars(modelId, nullptr);
     std::string new_model_id(model_id);
-    const char* model_dir = env->GetStringUTFChars(modelDir, 0);
+    const char* model_dir = env->GetStringUTFChars(modelDir, nullptr);
     auto model_dir_str = std::string(model_dir);
     std::string root_cache_dir_str = std::string(root_cache_dir);
     env->ReleaseStringUTFChars(modelId, model_id);
     env->ReleaseStringUTFChars(modelDir, model_dir);
     env->ReleaseStringUTFChars(rootCacheDir, root_cache_dir);
+    env->ReleaseStringUTFChars(configJsonStr, config_json_cstr);
     MNN_DEBUG("createLLM BeginLoad %s", model_dir);
     if (is_diffusion) {
-        auto diffusion = new DiffusionSession(model_dir);
+        int diffusion_memory_mode_int = std::stoi(diffusion_memory_mode);
+        auto diffusion = new DiffusionSession(model_dir, diffusion_memory_mode_int);
         return reinterpret_cast<jlong>(diffusion);
     }
     bool use_mmap = !root_cache_dir_str.empty();
@@ -152,24 +156,23 @@ JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_session_MNN_initNative(JNIEn
     auto executor = MNN::Express::Executor::newExecutor(MNN_FORWARD_CPU, backendConfig, 1);
     MNN::Express::ExecutorScope s(executor);
     auto llm = Llm::createLLM(model_dir_str);
-    std::string extra_config = use_mmap ? R"({"use_mmap":true)" : R"({"use_mmap":false)";
-    if (use_opencl) {
-        extra_config += R"(,"backend_type":"opencl")";
-    } else {
-        extra_config += R"(,"backend_type":"cpu")";
-    }
-    extra_config += R"(,"sampler_type":")" + sp + R"(")";
+    json extra_config;
+    extra_config["use_mmap"] = use_mmap;
     if (use_mmap) {
-        std::string temp_dir = root_cache_dir_str + R"(/tmp)";
-        extra_config += R"(,"tmp_path":")" + temp_dir + R"(")";
+        std::string temp_dir = root_cache_dir_str;
+        extra_config["tmp_path"] = temp_dir;
     }
     if (is_r1) {
-        extra_config += R"(,"use_template":false, "precision": "high")";
+        extra_config["use_template"] = false;
+        extra_config["precision"] = "high";
     }
-    extra_config = extra_config + R"(})";
-    MNN_DEBUG("extra_config: %s", extra_config.c_str());
-    llm->set_config(extra_config);
+    extra_config["sampler_type"] = sampler;
+    auto extra_config_str = extra_config.dump();
+    MNN_DEBUG("extra_config: %s", extra_config_str.c_str());
+    llm->set_config(extra_config_str);
     MNN_DEBUG("dumped config: %s", llm->dump_config().c_str());
+    history.clear();
+    history.emplace_back("system", is_r1 ? "<|begin_of_sentence|>You are a helpful assistant." : "You are a helpful assistant.");
     llm->load();
     MNN_DEBUG("createLLM EndLoad %ld ", reinterpret_cast<jlong>(llm));
     return reinterpret_cast<jlong>(llm);
@@ -189,7 +192,7 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_session_MNN_submitNative(J
     stop_requested = false;
 
     // 清空历史记录，准备添加新的对话内容
-    history.clear();
+    history.resize(1);
 
     // 处理传入的chatHistory列表
     jclass listClass = env->GetObjectClass(chatHistory);
@@ -217,8 +220,6 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_session_MNN_submitNative(J
             history.emplace_back("user", getUserString(text, false));
         } else if (strcmp(role, "assistant") == 0) {
             history.emplace_back("assistant", text);
-        } else if (strcmp(role, "system") == 0) {
-            history.emplace_back("system", text);
         }
 
         // 释放资源
@@ -251,6 +252,7 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_session_MNN_submitNative(J
                 }
                 response_result = getR1AssistantString(response_result);
             }
+            history.emplace_back("assistant", response_result);
         }
         if (progressListener && onProgressMethod) {
             jstring javaString = is_eop ? nullptr : env->NewStringUTF(utf8Char.c_str());

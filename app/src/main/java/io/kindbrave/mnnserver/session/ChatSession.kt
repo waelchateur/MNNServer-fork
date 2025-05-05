@@ -10,6 +10,8 @@ import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelPreferences
 import io.kindbrave.mnnserver.utils.ModelUtils
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.File
 import java.io.Serializable
 
@@ -20,6 +22,8 @@ class ChatSession(
     private val useTmpPath: Boolean,
     private val useTemplate: Boolean = true
 ) : Serializable {
+
+    private val tag = ChatSession::class.java.simpleName
     
     private var nativePtr: Long = 0
     
@@ -32,16 +36,14 @@ class ChatSession(
     @Volatile
     private var isReleaseRequested = false
 
-    private val TAG = "ChatSession"
-
     private val mnn = MNN()
     
     init {
-        Log.d(TAG, "Initializing ChatSession with modelId: $modelId")
+        Log.d(tag, "Initializing ChatSession with modelId: $modelId")
     }
     
     fun load() {
-        Log.d(TAG, "Loading model: $modelId")
+        Log.d(tag, "Loading model: $modelId")
         isModelLoading = true
         
         try {
@@ -54,6 +56,20 @@ class ChatSession(
                 File(dir).mkdirs()
                 dir
             } else ""
+
+            val configJson = JSONObject()
+            try {
+                configJson.put("backend", "cpu")
+                configJson.put("sampler", sampler)
+                configJson.put("is_diffusion", false)
+                configJson.put("is_r1", ModelUtils.isR1Model(modelId))
+                configJson.put(
+                    "diffusion_memory_mode",
+                    "0"
+                )
+            } catch (e: JSONException) {
+                throw RuntimeException(e)
+            }
             
             // 调用JNI初始化模型
             nativePtr = mnn.initNative(
@@ -61,15 +77,12 @@ class ChatSession(
                 modelId = modelId,
                 configPath = configPath,
                 useTmpPath = useTmpPath,
-                isDiffusion = false,
-                isR1 = isR1Model,
-                backend = false,
-                sampler = sampler
+                configJsonStr = configJson.toString()
             )
             
-            Log.d(TAG, "Model loaded successfully, nativePtr: $nativePtr")
+            Log.d(tag, "Model loaded successfully, nativePtr: $nativePtr")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load model", e)
+            Log.e(tag, "Failed to load model", e)
             throw e
         } finally {
             isModelLoading = false
@@ -83,9 +96,10 @@ class ChatSession(
         history: MutableList<ChatDataItem>,
         progressListener: GenerateProgressListener?
     ): HashMap<String?, Any?>? {
+        Log.e(tag, "$history")
         synchronized(this) {
             if (nativePtr == 0L) {
-                Log.e(TAG, "Cannot generate: model not loaded")
+                Log.e(tag, "Cannot generate: model not loaded")
                 return null
             }
 
@@ -105,7 +119,7 @@ class ChatSession(
     fun reset() {
         synchronized(this) {
             if (nativePtr != 0L) {
-                Log.d(TAG, "Resetting session")
+                Log.d(tag, "Resetting session")
                 mnn.resetNative(nativePtr)
             }
         }
@@ -113,7 +127,7 @@ class ChatSession(
     
     fun release() {
         synchronized(this) {
-            Log.d(TAG, "Releasing session, nativePtr: $nativePtr, isGenerating: $isGenerating")
+            Log.d(tag, "Releasing session, nativePtr: $nativePtr, isGenerating: $isGenerating")
             
             if (!isGenerating && !isModelLoading) {
                 releaseInternal()
@@ -125,7 +139,7 @@ class ChatSession(
                         (this as Object).wait(100)
                     } catch (e: InterruptedException) {
                         Thread.currentThread().interrupt()
-                        Log.e(TAG, "Thread interrupted while waiting for release", e)
+                        Log.e(tag, "Thread interrupted while waiting for release", e)
                     }
                 }
                 releaseInternal()
