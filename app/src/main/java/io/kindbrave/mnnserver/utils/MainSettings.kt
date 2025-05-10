@@ -3,19 +3,9 @@
 package io.kindbrave.mnnserver.utils
 
 import android.content.Context
-
+import com.alibaba.mls.api.source.ModelSources
 
 object MainSettings {
-
-//    fun getDownloadProvider(context: Context): ModelSources.ModelSourceType {
-//        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-//        val result = sharedPreferences.getString("download_provider", "HuggingFace")
-//        return when (result) {
-//            "HuggingFace" -> ModelSources.ModelSourceType.HUGGING_FACE
-//            "ModelScope" -> ModelSources.ModelSourceType.MODEL_SCOPE
-//            else -> ModelSources.ModelSourceType.MODELERS
-//         }
-//    }
 //
 //    fun isStopDownloadOnChatEnabled(context: Context): Boolean {
 //        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)

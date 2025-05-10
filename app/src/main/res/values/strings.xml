@@ -39,4 +39,6 @@
     <string name="unloading_model">Unloading model %1$s</string>
     <string name="thinking_mode">Deep Thinking</string>
     <string name="no_thinking_mode">No Deep Thinking</string>
+    <string name="download_models">Download Models</string>
+    <string name="loading_model_list">Loading Model List</string>
 </resources>

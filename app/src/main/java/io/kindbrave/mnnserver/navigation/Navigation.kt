@@ -4,8 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.kindbrave.mnnserver.ui.screens.*
-import io.kindbrave.mnnserver.ui.screens.model.ModelListScreen
+import io.kindbrave.mnnserver.ui.screens.download.DownloadScreen
+import io.kindbrave.mnnserver.ui.screens.log.LogsScreen
+import io.kindbrave.mnnserver.ui.screens.main.MainScreen
+import io.kindbrave.mnnserver.ui.screens.modellist.ModelListScreen
+import io.kindbrave.mnnserver.ui.screens.settings.SettingsScreen
 
 @Composable
 fun Navigation() {
@@ -29,6 +32,10 @@ fun Navigation() {
         
         composable("settings/logs") {
             LogsScreen(navController = navController)
+        }
+
+        composable("settings/download") {
+            DownloadScreen(navController = navController)
         }
     }
 } 

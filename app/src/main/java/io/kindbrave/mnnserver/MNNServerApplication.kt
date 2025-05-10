@@ -1,8 +1,10 @@
 package io.kindbrave.mnnserver
 
 import android.app.Application
-import io.kindbrave.mnnserver.api.ApplicationProvider
+import com.alibaba.mls.api.ApplicationProvider
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class MNNServerApplication : Application() {
 
     override fun onCreate() {

@@ -6,7 +6,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import io.kindbrave.mnnserver.api.ApplicationProvider
+import com.alibaba.mls.api.ApplicationProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

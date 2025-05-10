@@ -39,4 +39,6 @@
     <string name="unloading_model">正在卸载模型 %1$s</string>
     <string name="thinking_mode">深度思考</string>
     <string name="no_thinking_mode">快速回答</string>
+    <string name="download_models">下载模型</string>
+    <string name="loading_model_list">加载模型列表</string>
 </resources> 

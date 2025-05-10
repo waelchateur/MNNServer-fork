@@ -13,17 +13,9 @@ import androidx.core.app.NotificationCompat
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.utils.LogManager
 import io.kindbrave.mnnserver.webserver.KtorServer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import org.nanohttpd.protocols.http.IHTTPSession
-import org.nanohttpd.protocols.http.NanoHTTPD
-import org.nanohttpd.protocols.http.response.Response
 import java.io.IOException
-import java.io.InputStream
 
 class WebServerService : Service() {
     private val TAG = "WebServerService"

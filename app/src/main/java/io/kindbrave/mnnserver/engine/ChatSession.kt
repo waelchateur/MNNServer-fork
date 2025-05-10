@@ -4,21 +4,16 @@
 package io.kindbrave.mnnserver.engine
 
 import android.util.Log
+import com.alibaba.mls.api.ApplicationProvider
 import com.google.gson.Gson
-import io.kindbrave.mnnserver.api.ApplicationProvider
-import io.kindbrave.mnnserver.data.SettingsRepository
+import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.kindbrave.mnnserver.engine.MNN.AudioDataListener
 import io.kindbrave.mnnserver.engine.MNN.GenerateProgressListener
-import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelConfig
 import io.kindbrave.mnnserver.utils.ModelPreferences
 import io.kindbrave.mnnserver.utils.ModelUtils
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.File
-import java.io.Serializable
-import kotlin.text.get
 
 class ChatSession(
     internal val modelId: String,
