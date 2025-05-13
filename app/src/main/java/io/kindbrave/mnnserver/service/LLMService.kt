@@ -6,11 +6,18 @@ package io.kindbrave.mnnserver.service
 import android.text.TextUtils
 import io.kindbrave.mnnserver.engine.ChatSession
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LLMService private constructor() {
-    private val chatSessionMap: MutableMap<String, ChatSession> = HashMap()
-    // private val embeddingSessionMap: MutableMap<String, EmbeddingSession> = HashMap()
+@Singleton
+class LLMService @Inject constructor() {
+    private val chatSessionMap = mutableMapOf<String, ChatSession>()
+    private val _loadedModelsState: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
+    val loadedModelsState: StateFlow<Set<String>> = _loadedModelsState
 
     suspend fun createChatSession(
         modelId: String,
@@ -29,8 +36,9 @@ class LLMService private constructor() {
         )
 
         session.load()
-        
+
         chatSessionMap[modelId] = session
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { add(modelId) })
         return session
     }
     
@@ -57,8 +65,7 @@ class LLMService private constructor() {
 //        embeddingSessionMap[modelId] = session
 //        return session
 //    }
-    
-    @Synchronized
+
     fun getChatSession(modelId: String): ChatSession? {
         return chatSessionMap[modelId]
     }
@@ -67,11 +74,11 @@ class LLMService private constructor() {
 //    fun getEmbeddingSession(modelId: String): EmbeddingSession? {
 //        return embeddingSessionMap[modelId]
 //    }
-    
-    @Synchronized
-    fun removeChatSession(modelId: String) {
+
+    suspend fun removeChatSession(modelId: String) {
         chatSessionMap[modelId]?.release()
         chatSessionMap.remove(modelId)
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
     }
     
 //    @Synchronized
@@ -79,8 +86,7 @@ class LLMService private constructor() {
 //        embeddingSessionMap[modelId]?.release()
 //        embeddingSessionMap.remove(modelId)
 //    }
-    
-    @Synchronized
+
     fun getAllChatSessions(): List<ChatSession> {
         return chatSessionMap.values.toList()
     }
@@ -89,23 +95,16 @@ class LLMService private constructor() {
 //    fun getAllEmbeddingSessions(): List<EmbeddingSession> {
 //        return embeddingSessionMap.values.toList()
 //    }
-    
-    @Synchronized
-    fun releaseAllSessions() {
+
+    suspend fun releaseAllSessions() {
         chatSessionMap.values.forEach { it.release() }
-        // embeddingSessionMap.values.forEach { it.release() }
         chatSessionMap.clear()
+        _loadedModelsState.emit(emptySet())
+        // embeddingSessionMap.values.forEach { it.release() }
         // embeddingSessionMap.clear()
     }
-    
-    companion object {
-        @Volatile
-        private var instance: LLMService? = null
-        
-        fun getInstance(): LLMService {
-            return instance ?: synchronized(this) {
-                instance ?: LLMService().also { instance = it }
-            }
-        }
+
+    fun isModelLoaded(modelId: String): Boolean {
+        return chatSessionMap.containsKey(modelId)
     }
 }

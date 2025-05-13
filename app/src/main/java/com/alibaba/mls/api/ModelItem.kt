@@ -34,6 +34,17 @@ class ModelItem {
         tags.add(tag)
     }
 
+    override fun toString(): String {
+        return "ModelItem{" +
+                "modelId='" + modelId + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", downloads=" + downloads +
+                ", localPath='" + localPath + '\'' +
+                ", tags=" + tags +
+                ", cachedTags=" + cachedTags +
+                '}'
+    }
+
     companion object {
         fun fromLocalModel(modelId:String, path:String):ModelItem {
             return ModelItem().apply {

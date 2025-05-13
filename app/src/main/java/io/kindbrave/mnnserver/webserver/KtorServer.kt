@@ -17,9 +17,15 @@ import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class KtorServer(port: Int) {
-    private val mnnHandler = MNNHandler()
+@Singleton
+class KtorServer @Inject constructor(
+    private val mnnHandler: MNNHandler,
+) {
+    var port = 8080
+
     private val server by lazy {
         embeddedServer(Netty, port) {
             install(CallLogging)

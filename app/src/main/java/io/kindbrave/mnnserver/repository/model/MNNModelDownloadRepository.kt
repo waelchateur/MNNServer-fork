@@ -1,14 +1,19 @@
-package io.kindbrave.mnnserver.repository.download
+package io.kindbrave.mnnserver.repository.model
 
 import android.content.Context
-import android.util.Log
 import com.alibaba.mls.api.HfApiClient
 import com.alibaba.mls.api.ModelItem
+import com.alibaba.mls.api.download.DownloadInfo
+import com.alibaba.mls.api.download.DownloadListener
+import com.alibaba.mls.api.download.ModelDownloadManager
+import com.elvishew.xlog.XLog
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.kindbrave.mnnserver.annotation.LogAfter
+import io.kindbrave.mnnserver.annotation.LogBefore
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileNotFoundException
@@ -20,10 +25,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MNNModelListRepository @Inject constructor(
+class MNNModelDownloadRepository @Inject constructor(
     @ApplicationContext private val context: Context
-){
-    private val tag = MNNModelListRepository::class.java.simpleName
+) {
+    private val tag = MNNModelDownloadRepository::class.simpleName
+    private val modelDownloadManager = ModelDownloadManager.getInstance(context)
 
     private var bestApiClient: HfApiClient? = null
     private var networkErrorCount = 0
@@ -58,22 +64,16 @@ class MNNModelListRepository @Inject constructor(
                     onSuccess(hfModelItems)
                     HfApiClient.Companion.bestClient = bestApiClient
                 }
-                Log.d(
-                    tag,
-                    "requestRepoListWithClient success : $tag"
-                )
             }
 
             override fun onFailure(error: String?) {
                 networkErrorCount++
-                Log.d(
-                    tag,
-                    "on requestRepoListWithClient Failure $error tag:$tag"
+                XLog.tag(tag).d(
+                    "requestRepoListWithClient:on requestRepoListWithClient Failure $error"
                 )
                 if (networkErrorCount == loadCount) {
-                    Log.e(
-                        tag,
-                        "on requestRepoListWithClient Failure With Retry $error"
+                    XLog.tag(tag).e(
+                        "requestRepoListWithClient:on requestRepoListWithClient Failure With Retry $error"
                     )
                     onFailure(error)
                 }
@@ -94,13 +94,13 @@ class MNNModelListRepository @Inject constructor(
                 return gson.fromJson(reader, listType)
             }
         } catch (e: FileNotFoundException) {
-            Log.d(tag, "Cache file not found.")
+            XLog.tag(tag).d("loadFromCache:Cache file not found.")
             return null
         } catch (e: IOException) {
-            Log.e(tag, "loadFromCacheError", e) // Log the full exception for debugging
+            XLog.tag(tag).e("loadFromCache:loadFromCacheError", e) // Log the full exception for debugging
             return null
         } catch (e: JsonSyntaxException) {
-            Log.e(tag, "loadFromCacheError: Invalid JSON", e)
+            XLog.tag(tag).e("loadFromCache:loadFromCacheError: Invalid JSON", e)
             return null
         }
     }
@@ -115,10 +115,10 @@ class MNNModelListRepository @Inject constructor(
             val listType = object : TypeToken<List<ModelItem?>?>() {}.type
             return gson.fromJson(bufferedReader, listType)
         } catch (e: IOException) {
-            Log.e(tag, "loadFromAssets: Error reading from assets", e)
+            XLog.tag(tag).e("loadFromAssets:Error reading from assets", e)
             return null
         } catch (e: JsonSyntaxException) {
-            Log.e(tag, "loadFromAssets: Invalid JSON in assets", e)
+            XLog.tag(tag).e("loadFromAssets:Invalid JSON in assets", e)
             return null
         }
     }
@@ -132,7 +132,33 @@ class MNNModelListRepository @Inject constructor(
                 writer.write(json)
             }
         } catch (e: IOException) {
-            Log.e(tag, "saveToCacheError")
+            XLog.tag(tag).e("saveToCache:saveToCacheError $e")
         }
+    }
+
+    fun setListener(downloadListener: DownloadListener) {
+        modelDownloadManager.setListener(downloadListener)
+    }
+
+    fun getModelDownloadInfo(model: ModelItem): DownloadInfo? {
+        if (model.isLocal.not()) {
+            val downloadInfo = modelDownloadManager.getDownloadInfo(model.modelId!!)
+            return downloadInfo
+        }
+        return null
+    }
+
+    @LogBefore("")
+    fun startDownload(model: ModelItem) {
+        modelDownloadManager.startDownload(model.modelId!!)
+    }
+
+    fun pauseDownload(model: ModelItem) {
+        modelDownloadManager.pauseDownload(model.modelId!!)
+    }
+
+    @LogAfter("")
+    fun deleteModel(model: ModelItem) {
+        modelDownloadManager.removeDownload(model.modelId!!)
     }
 }

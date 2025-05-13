@@ -41,4 +41,6 @@
     <string name="no_thinking_mode">快速回答</string>
     <string name="download_models">下载模型</string>
     <string name="loading_model_list">加载模型列表</string>
+    <string name="loading_model_no_name">加载模型</string>
+    <string name="delete_model">删除模型</string>
 </resources> 

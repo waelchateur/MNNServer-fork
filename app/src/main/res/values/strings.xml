@@ -41,4 +41,6 @@
     <string name="no_thinking_mode">No Deep Thinking</string>
     <string name="download_models">Download Models</string>
     <string name="loading_model_list">Loading Model List</string>
+    <string name="loading_model_no_name">Loading Model</string>
+    <string name="delete_model">Delete Model</string>
 </resources>

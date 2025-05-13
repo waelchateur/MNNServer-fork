@@ -34,6 +34,12 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse"/>
+
+        <service
+            android:name="com.alibaba.mls.api.download.DownlodForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

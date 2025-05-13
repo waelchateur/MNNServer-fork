@@ -10,22 +10,30 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.StatFs
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnnserver.data.LogRepository
-import io.kindbrave.mnnserver.model.ModelManager
+import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
 import io.kindbrave.mnnserver.repository.SettingsRepository
+import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.service.WebServerService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(private val application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val llmService: LLMService
+) : ViewModel() {
 
     private val tag = MainViewModel::class.java.simpleName
-    private val modelManager = ModelManager.Companion.getInstance(application)
-    private val settingsRepository = SettingsRepository(application)
-    private val logRepository = LogRepository(application)
+    private val settingsRepository = SettingsRepository(context)
+    private val logRepository = LogRepository(context)
 
     private val _serverStatus =
         MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
@@ -67,8 +75,8 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
     init {
         // 监听模型列表变化
         viewModelScope.launch {
-            modelManager.modelList.collect { models ->
-                _loadedModelsCount.value = models.count { it.isLoaded }
+            llmService.loadedModelsState.collect { models ->
+                _loadedModelsCount.value = models.size
             }
         }
 
@@ -84,23 +92,23 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
     }
 
     private fun bindService() {
-        val intent = Intent(application, WebServerService::class.java)
-        application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        val intent = Intent(context, WebServerService::class.java)
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     private fun unbindService() {
-        application.unbindService(serviceConnection)
+        context.unbindService(serviceConnection)
     }
 
     fun startServer() {
         viewModelScope.launch {
-            WebServerService.Companion.startService(application, _serverPort.value)
+            WebServerService.Companion.startService(context, _serverPort.value)
         }
     }
 
     fun stopServer() {
         viewModelScope.launch {
-            WebServerService.Companion.stopService(application)
+            WebServerService.Companion.stopService(context)
         }
     }
 
@@ -123,8 +131,6 @@ class MainViewModel(private val application: Application) : AndroidViewModel(app
 
     private fun updateSystemInfo() {
         viewModelScope.launch {
-            val context = getApplication<Application>()
-
             // Get memory info
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val memoryInfo = ActivityManager.MemoryInfo()

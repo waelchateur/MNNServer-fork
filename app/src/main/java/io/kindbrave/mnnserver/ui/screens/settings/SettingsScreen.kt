@@ -76,7 +76,7 @@ fun SettingsScreen(
                     painter = painterResource(R.drawable.list),
                     contentDescription = null
                 ) },
-                modifier = Modifier.clickable { navController.navigate("settings/model_list") }
+                modifier = Modifier.clickable { navController.navigate("model_list") }
             )
             
             ListItem(
@@ -87,16 +87,6 @@ fun SettingsScreen(
                     contentDescription = null
                 ) },
                 modifier = Modifier.clickable { navController.navigate("settings/logs") }
-            )
-
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.download_models)) },
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.download),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { navController.navigate("settings/download") }
             )
         }
         

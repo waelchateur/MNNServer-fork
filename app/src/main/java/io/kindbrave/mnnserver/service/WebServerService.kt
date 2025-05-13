@@ -10,19 +10,22 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import dagger.hilt.android.AndroidEntryPoint
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.utils.LogManager
 import io.kindbrave.mnnserver.webserver.KtorServer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.IOException
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WebServerService : Service() {
     private val TAG = "WebServerService"
     private val NOTIFICATION_ID = 1001
     private val CHANNEL_ID = "mnn_server_channel"
 
-    private lateinit var server: KtorServer
+    @Inject lateinit var server: KtorServer
 
     private val binder = LocalBinder()
     
@@ -80,7 +83,7 @@ class WebServerService : Service() {
     
     fun startServer(port: Int) {
         try {
-            server = KtorServer(port)
+            server.port = port
             server.start()
 
             _serverStatus.value = ServerStatus.Running
@@ -114,27 +117,6 @@ class WebServerService : Service() {
         object Running : ServerStatus()
         data class Error(val message: String) : ServerStatus()
     }
-    
-//    private inner class MNNWebServer(port: Int) : NanoHTTPD(port) {
-//        private val scope = MainScope()
-//        override fun serve(session: IHTTPSession): Response {
-//            scope.launch(Dispatchers.IO) {
-//
-//            }
-//            val uri = session.uri
-//            val method = session.method
-//
-//            addLog("收到请求: $method $uri")
-//
-//            // 使用 ApiHandler 处理 API 请求
-//            if (uri.startsWith("/v1")) {
-//                return apiHandler.handleRequest(session)
-//            }
-//
-//            // 处理非 API 请求
-//            return Response.newFixedLengthResponse("MNN Server is running")
-//        }
-//    }
     
     companion object {
         const val ACTION_START_SERVER = "io.kindbrave.mnnserver.action.START_SERVER"

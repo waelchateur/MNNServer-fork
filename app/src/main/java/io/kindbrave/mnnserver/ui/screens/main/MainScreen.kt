@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.kindbrave.mnnserver.R
@@ -22,7 +23,7 @@ import io.kindbrave.mnnserver.ui.screens.main.MainViewModel
 @Composable
 fun MainScreen(
     navController: NavController,
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     val serverStatus by viewModel.serverStatus.collectAsState()
     val port by viewModel.serverPort.collectAsState()

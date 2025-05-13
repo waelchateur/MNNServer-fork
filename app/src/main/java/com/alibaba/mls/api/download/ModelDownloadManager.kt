@@ -39,6 +39,7 @@ import com.alibaba.mls.api.ms.MsApiClient
 import com.alibaba.mls.api.ms.MsRepoInfo
 import com.alibaba.mls.api.source.ModelSources
 import com.alibaba.mls.api.source.RepoConfig
+import com.elvishew.xlog.XLog
 import io.kindbrave.mnnserver.utils.FileUtils.clearMmapCache
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -325,14 +326,8 @@ class ModelDownloadManager private constructor(private val context: Context) {
                         context,
                         Manifest.permission.POST_NOTIFICATIONS
                     )
-                    != PackageManager.PERMISSION_GRANTED
+                    == PackageManager.PERMISSION_GRANTED
                 ) {
-                    ActivityCompat.requestPermissions(
-                        context as Activity,
-                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                        REQUEST_CODE_POST_NOTIFICATIONS
-                    )
-                } else {
                     ApplicationProvider.get().startForegroundService(foregroundSerivceIntent)
                     foregroundServiceStarted = true
                 }

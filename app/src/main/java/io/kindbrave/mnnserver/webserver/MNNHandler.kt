@@ -9,12 +9,16 @@ import org.json.JSONObject
 import java.io.Writer
 import java.security.InvalidParameterException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MNNHandler {
+@Singleton
+class MNNHandler @Inject constructor(
+    private val llmService: LLMService
+) {
     private val tag = MNNHandler::class.java.simpleName
-    private val llmService = LLMService.getInstance()
 
-    fun getModels(): JSONObject {
+    suspend fun getModels(): JSONObject {
         val response = JSONObject()
         val modelsArray = JSONArray()
 
@@ -57,7 +61,7 @@ class MNNHandler {
         return response
     }
 
-    fun completions(requestJson: String, writer: Writer) {
+    suspend fun completions(requestJson: String, writer: Writer) {
         val jsonBody = JSONObject(requestJson)
 
         val modelId = jsonBody.optString("model", "")

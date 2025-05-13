@@ -1,0 +1,298 @@
+package io.kindbrave.mnnserver.ui.screens.download
+
+import android.content.Context
+import android.net.Uri
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.alibaba.mls.api.ModelItem
+import com.alibaba.mls.api.download.DownloadInfo
+import com.alibaba.mls.api.download.DownloadInfo.DownloadSate
+import com.alibaba.mls.api.download.DownloadListener
+import com.elvishew.xlog.XLog
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.kindbrave.mnnserver.R
+import io.kindbrave.mnnserver.engine.ChatSession
+import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
+import io.kindbrave.mnnserver.repository.model.MNNModelDownloadRepository
+import io.kindbrave.mnnserver.repository.model.MNNModelRepository
+import io.kindbrave.mnnserver.service.LLMService
+import io.kindbrave.mnnserver.utils.ModelNameUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class ModelListViewModel @Inject constructor(
+    private val mnnModelRepository: MNNModelRepository,
+    private val mnnModelDownloadRepository: MNNModelDownloadRepository,
+    private val userUploadModelRepository: UserUploadModelRepository,
+    private val llmService: LLMService,
+    @ApplicationContext private val context: Context
+) : ViewModel(), DownloadListener {
+    private val tag = ModelListViewModel::class.simpleName
+    private val _downloadModels: MutableStateFlow<List<ModelItem>> = MutableStateFlow(emptyList())
+    val downloadModels: StateFlow<List<ModelItem>> = _downloadModels
+    private val _userUploadModels: MutableStateFlow<List<UserUploadModelRepository.ModelInfo>> = MutableStateFlow(emptyList())
+    val userUploadModels: StateFlow<List<UserUploadModelRepository.ModelInfo>> = _userUploadModels
+
+    private val _getDownloadModelState: MutableStateFlow<GetDownloadModelState> = MutableStateFlow(GetDownloadModelState.Idle)
+    val getDownloadModelState: StateFlow<GetDownloadModelState> = _getDownloadModelState
+    val downloadStateMap: MutableMap<String, MutableStateFlow<ModelDownloadState>> = mutableMapOf()
+
+    private val _loadingState: MutableStateFlow<LoadingState> = MutableStateFlow(LoadingState.Idle)
+    val loadingState: StateFlow<LoadingState> = _loadingState
+
+    private var lastDownloadTime = 0L
+
+    val loadedModels: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
+
+    init {
+        getDownloadModels()
+        getUserUploadModels()
+        mnnModelDownloadRepository.setListener(this)
+        collectLoadedChatSessions()
+    }
+
+    private fun collectLoadedChatSessions() {
+        viewModelScope.launch {
+            llmService.loadedModelsState.collect { chatSessionMap ->
+                loadedModels.emit(chatSessionMap)
+            }
+        }
+    }
+
+    private fun getDownloadModels() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _getDownloadModelState.emit(GetDownloadModelState.Loading)
+            mnnModelDownloadRepository.loadFromCache()?.let { items ->
+                _downloadModels.emit(items)
+            }
+            mnnModelDownloadRepository.requestRepoList(
+                onSuccess = {
+                    _downloadModels.value = it
+                    _getDownloadModelState.value = GetDownloadModelState.Success
+                },
+                onFailure = {
+                    _getDownloadModelState.value = GetDownloadModelState.Error(it ?: "Unknown error")
+                }
+            )
+        }
+    }
+
+    fun startDownload(model: ModelItem) {
+        val now = System.currentTimeMillis()
+        if (now - lastDownloadTime < 500) {
+            lastDownloadTime = now
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            mnnModelDownloadRepository.startDownload(model)
+        }
+    }
+
+    fun pauseDownload(model: ModelItem) {
+        val now = System.currentTimeMillis()
+        if (now - lastDownloadTime < 500) {
+            lastDownloadTime = now
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            mnnModelDownloadRepository.pauseDownload(model)
+        }
+    }
+
+    fun deleteDownloadModel(model: ModelItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            mnnModelDownloadRepository.deleteModel(model)
+        }
+    }
+
+    /**
+     * 用户进入界面后刷新模型下载状态
+     */
+    fun updateDownloadState(model: ModelItem) {
+        val modelId = model.modelId ?: ""
+        downloadStateMap[modelId] = MutableStateFlow(ModelDownloadState.Idle)
+        viewModelScope.launch {
+            mnnModelDownloadRepository.getModelDownloadInfo(model)?.let { downloadInfo ->
+                when (downloadInfo.downlodaState) {
+                    DownloadSate.NOT_START -> {
+                        downloadStateMap[modelId]!!.emit(ModelDownloadState.Idle)
+                    }
+                    DownloadSate.DOWNLOADING -> {
+                        downloadStateMap[modelId]!!.emit(ModelDownloadState.Progress(downloadInfo.progress))
+                    }
+                    DownloadSate.COMPLETED -> {
+                        downloadStateMap[modelId]!!.emit(ModelDownloadState.Finished(downloadInfo.currentFile.toString()))
+                    }
+                    DownloadSate.PAUSED -> {
+                        downloadStateMap[modelId]!!.emit(ModelDownloadState.Paused(downloadInfo.progress))
+                    }
+                    DownloadSate.FAILED -> {
+                        downloadStateMap[modelId]!!.emit(ModelDownloadState.Failed(downloadInfo.errorMessage.toString()))
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadDownloadModel(model: ModelItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.loading_model, model.modelName)))
+            runCatching {
+                mnnModelRepository.loadModel(model)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure { e ->
+                _loadingState.emit(LoadingState.Error(e.message.toString()))
+            }
+        }
+    }
+
+    fun unloadDownloadModel(model: ModelItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.unloading_model, model.modelName)))
+            runCatching {
+                mnnModelRepository.unloadModel(model)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure { e ->
+                _loadingState.emit(LoadingState.Error(e.message.toString()))
+            }
+        }
+    }
+
+    fun isModelLoaded(model: ModelItem): Boolean {
+        return mnnModelRepository.isModelLoaded(model)
+    }
+
+    private fun getUserUploadModels() {
+        viewModelScope.launch {
+            userUploadModelRepository.refreshModels()
+            userUploadModelRepository.modelList.collect { models ->
+                _userUploadModels.emit(models)
+            }
+        }
+    }
+
+    fun loadUserUploadModel(model: UserUploadModelRepository.ModelInfo) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.loading_model, model.name)))
+            runCatching {
+                userUploadModelRepository.loadModel(model)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure { e ->
+                _loadingState.emit(LoadingState.Error(e.message.toString()))
+            }
+        }
+    }
+
+    fun unloadUserUploadModel(model: UserUploadModelRepository.ModelInfo) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.unloading_model, model.name)))
+            runCatching {
+                userUploadModelRepository.unloadModel(model)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure { e ->
+                _loadingState.emit(LoadingState.Error(e.message.toString()))
+            }
+        }
+    }
+
+    fun deleteUserUploadModel(model: UserUploadModelRepository.ModelInfo) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.delete_model)))
+            runCatching {
+                userUploadModelRepository.deleteModel(model.id)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure { e ->
+                _loadingState.emit(LoadingState.Error(e.message.toString()))
+            }
+        }
+    }
+
+    fun isModelLoaded(model: UserUploadModelRepository.ModelInfo): Boolean {
+        return userUploadModelRepository.isModelLoaded(model)
+    }
+
+    fun onModelNameEntered(modelName: String, folderUri: Uri?) {
+        if (ModelNameUtils.isValidModelName(modelName).not()) {
+            _loadingState.value = LoadingState.Error(context.getString(R.string.invalid_model_name))
+            return
+        }
+
+        viewModelScope.launch {
+            _loadingState.emit(LoadingState.Loading(context.getString(R.string.import_model)))
+            runCatching {
+                userUploadModelRepository.uploadUserModelFromUri(folderUri, modelName)
+                _loadingState.emit(LoadingState.Idle)
+            }.onFailure {
+                _loadingState.emit(LoadingState.Error(it.message.toString()))
+            }
+        }
+    }
+
+    override fun onDownloadStart(modelId: String) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.Start)
+        }
+    }
+
+    override fun onDownloadFailed(modelId: String, hfApiException: Exception) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.Failed(hfApiException.message.toString()))
+        }
+    }
+
+    override fun onDownloadProgress(
+        modelId: String,
+        progress: DownloadInfo
+    ) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.Progress(progress.progress))
+        }
+    }
+
+    override fun onDownloadFinished(modelId: String, path: String) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.Finished(path))
+        }
+    }
+
+    override fun onDownloadPaused(modelId: String) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.Paused((-1.0)))
+        }
+    }
+
+    override fun onDownloadFileRemoved(modelId: String) {
+        viewModelScope.launch {
+            downloadStateMap[modelId]?.emit(ModelDownloadState.FileRemoved)
+        }
+    }
+}
+
+sealed class ModelDownloadState {
+    data object Idle: ModelDownloadState()
+    data object Start: ModelDownloadState()
+    data class Failed(val message: String): ModelDownloadState()
+    data class Progress(val progress: Double): ModelDownloadState()
+    data class Finished(val path: String): ModelDownloadState()
+    data class Paused(val progress: Double): ModelDownloadState()
+    data object FileRemoved: ModelDownloadState()
+}
+
+sealed class GetDownloadModelState {
+    data object Idle: GetDownloadModelState()
+    data object Loading : GetDownloadModelState()
+    data object Success : GetDownloadModelState()
+    data class Error(val message: String) : GetDownloadModelState()
+}
+
+sealed class LoadingState {
+    data object Idle: LoadingState()
+    data class Loading(val message: String) : LoadingState()
+    data class Error(val message: String) : LoadingState()
+    data object Success : LoadingState()
+}

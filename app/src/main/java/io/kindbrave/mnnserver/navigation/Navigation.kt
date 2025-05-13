@@ -1,13 +1,14 @@
 package io.kindbrave.mnnserver.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.kindbrave.mnnserver.ui.screens.download.DownloadScreen
+import io.kindbrave.mnnserver.ui.screens.download.ModelListScreen
 import io.kindbrave.mnnserver.ui.screens.log.LogsScreen
 import io.kindbrave.mnnserver.ui.screens.main.MainScreen
-import io.kindbrave.mnnserver.ui.screens.modellist.ModelListScreen
 import io.kindbrave.mnnserver.ui.screens.settings.SettingsScreen
 
 @Composable
@@ -16,7 +17,19 @@ fun Navigation() {
     
     NavHost(
         navController = navController,
-        startDestination = "main"
+        startDestination = "main",
+        enterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300))
+        },
+        exitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300))
+        },
+        popEnterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300))
+        },
+        popExitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300))
+        }
     ) {
         composable("main") {
             MainScreen(navController = navController)
@@ -26,16 +39,12 @@ fun Navigation() {
             SettingsScreen(navController = navController)
         }
         
-        composable("settings/model_list") {
-            ModelListScreen(navController = navController)
-        }
-        
         composable("settings/logs") {
             LogsScreen(navController = navController)
         }
 
-        composable("settings/download") {
-            DownloadScreen(navController = navController)
+        composable("model_list") {
+            ModelListScreen(navController = navController)
         }
     }
 } 
