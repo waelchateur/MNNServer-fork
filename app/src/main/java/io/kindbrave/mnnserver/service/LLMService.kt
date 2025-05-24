@@ -4,12 +4,15 @@
 package io.kindbrave.mnnserver.service
 
 import android.text.TextUtils
+import com.elvishew.xlog.XLog
 import io.kindbrave.mnnserver.engine.ChatSession
+import io.kindbrave.mnnserver.engine.EmbeddingSession
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Arrays
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,14 +31,24 @@ class LLMService @Inject constructor() {
         if (TextUtils.isEmpty(finalSessionId)) {
             finalSessionId = System.currentTimeMillis().toString()
         }
-        
+
+        val embeddingSession  = EmbeddingSession(
+            modelId = modelId,
+            sessionId = finalSessionId,
+            configPath = "$modelDir/config.json",
+        )
+
+        embeddingSession.load()
+        val r = embeddingSession.embedding("hello how are you")
+        XLog.d("embedding result: ${r.contentToString()}")
+
         val session = ChatSession(
             modelId = modelId,
             sessionId = finalSessionId,
             configPath = "$modelDir/config.json",
         )
 
-        session.load()
+        // session.load()
 
         chatSessionMap[modelId] = session
         _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { add(modelId) })

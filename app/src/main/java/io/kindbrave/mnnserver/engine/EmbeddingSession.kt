@@ -1,121 +1,136 @@
-//// Created by ruoyi.sjd on 2024/12/26.
-//// Copyright (c) 2024 Alibaba Group Holding Limited All rights reserved.
-//// Created by KindBrave on 2025/03/26.
-//package io.kindbrave.mnnserver.engine
-//
-//import android.util.Log
-//import io.kindbrave.mnnserver.api.ApplicationProvider
-//import io.kindbrave.mnnserver.service.LLMService
-//import io.kindbrave.mnnserver.utils.FileUtils
-//import io.kindbrave.mnnserver.utils.ModelPreferences
-//import java.io.File
-//import java.io.Serializable
-//
-//class EmbeddingSession(
-//    private val modelId: String,
-//    var sessionId: String,
-//    private val configPath: String,
-//    private val useTmpPath: Boolean
-//) : Serializable {
-//
-//    private var nativePtr: Long = 0
-//    private val TAG = "EmbeddingSession"
-//
-//    @Volatile
-//    private var isModelLoading = false
-//
-//    @Volatile
-//    private var isProcessing = false
-//
-//    @Volatile
-//    private var isReleaseRequested = false
-//
-//    init {
-//        Log.d(TAG, "Initializing EmbeddingSession with modelId: $modelId")
-//    }
-//
-//    fun load() {
-//        Log.d(TAG, "Loading embedding model: $modelId")
-//        isModelLoading = true
-//
-//        try {
-//            val useOpenCL = ModelPreferences.getBoolean(ApplicationProvider.get(), modelId, ModelPreferences.KEY_BACKEND, false);
-//            val rootCacheDir = if (ModelPreferences.useMmap(ApplicationProvider.get(), modelId)) {
-//                val dir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"));
-//                File(dir).mkdirs()
-//                dir
-//            } else ""
-//
-//            nativePtr = mnn.initEmbeddingNative(
-//                rootCacheDir = rootCacheDir,
-//                configPath = configPath,
-//                backend = useOpenCL
-//            )
-//
-//            Log.d(TAG, "Embedding model loaded successfully, nativePtr: $nativePtr")
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Failed to load embedding model", e)
-//        } finally {
-//            isModelLoading = false
-//            if (isReleaseRequested) {
-//                release()
-//            }
-//        }
-//    }
-//
-//    fun getEmbedding(text: String): FloatArray? {
-//        synchronized(this) {
-//            if (nativePtr == 0L) {
-//                Log.e(TAG, "Cannot generate embedding: model not loaded")
-//                return null
-//            }
-//
-//            Log.d(TAG, "Generating embedding for text: $text")
-//            isProcessing = true
-//
-//            try {
-//                return mnn.getTextEmbeddingNative(nativePtr, text)
-//            } finally {
-//                isProcessing = false
-//                if (isReleaseRequested) {
-//                    release()
-//                }
-//            }
-//        }
-//    }
-//
-//    fun release() {
-//        synchronized(this) {
-//            Log.d(TAG, "Releasing embedding session, nativePtr: $nativePtr")
-//
-//            if (!isProcessing && !isModelLoading) {
-//                releaseInternal()
-//            } else {
-//                isReleaseRequested = true
-//                // 等待处理或加载完成
-//                while (isProcessing || isModelLoading) {
-//                    try {
-//                        (this as Object).wait(100)
-//                    } catch (e: InterruptedException) {
-//                        Thread.currentThread().interrupt()
-//                        Log.e(TAG, "Thread interrupted while waiting for release", e)
-//                    }
-//                }
-//                releaseInternal()
-//            }
-//        }
-//    }
-//
-//    private fun releaseInternal() {
-//        if (nativePtr != 0L) {
-//            mnn.releaseEmbeddingNative(nativePtr)
-//            nativePtr = 0
-//            LLMService.Companion.getInstance().removeEmbeddingSession(sessionId)
-//            (this as Object).notifyAll()
-//        }
-//    }
-//
-//    protected fun finalize() {
-//        release()
-//    }
-//}
+// Created by ruoyi.sjd on 2024/12/25.
+// Copyright (c) 2024 Alibaba Group Holding Limited All rights reserved.
+// Created by KindBrave on 2025/03/26.
+package io.kindbrave.mnnserver.engine
+
+import android.util.Log
+import com.alibaba.mls.api.ApplicationProvider
+import com.google.gson.Gson
+import io.kindbrave.mnnserver.repository.SettingsRepository
+import io.kindbrave.mnnserver.utils.FileUtils
+import io.kindbrave.mnnserver.utils.ModelConfig
+import io.kindbrave.mnnserver.utils.ModelPreferences
+import java.io.File
+
+class EmbeddingSession(
+    internal val modelId: String,
+    var sessionId: String,
+    private val configPath: String
+): Session() {
+    private val tag = EmbeddingSession::class.java.simpleName
+
+    private val settingsRepository = SettingsRepository(ApplicationProvider.get())
+
+    private var nativePtr: Long = 0
+
+    @Volatile
+    private var modelLoading = false
+
+    @Volatile
+    private var generating = false
+
+    @Volatile
+    private var releaseRequeted = false
+
+    suspend fun load() {
+        Log.d(tag, "Loading model: $modelId")
+        modelLoading = true
+
+        var rootCacheDir: String? = ""
+        if (ModelPreferences.useMmap(ApplicationProvider.get(), modelId)) {
+            rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))
+            File(rootCacheDir).mkdirs()
+        }
+        val useOpencl = ModelPreferences.getBoolean(
+            ApplicationProvider.get(),
+            modelId, ModelPreferences.KEY_BACKEND, false
+        )
+        val backend = if (useOpencl) "opencl" else "cpu"
+        val configMap = HashMap<String, Any>().apply {
+            put("mmap_dir", "")
+            put("diffusion_memory_mode", settingsRepository.getDiffusionMemoryMode())
+        }
+        val extraConfig = ModelConfig.loadConfig(configPath, getModelSettingsFile())?.apply {
+            this.backendType = backend
+        }
+        Log.d(tag, "MNN_DEBUG load initNative")
+        nativePtr = MNNEmbedding.initNative(
+            configPath,
+            if (extraConfig != null) {
+                Gson().toJson(extraConfig)
+            } else {
+                "{}"
+            },
+            Gson().toJson(configMap)
+        )
+        Log.d(tag, "MNN_DEBUG load initNative end")
+        modelLoading = false
+        if (releaseRequeted) {
+            release()
+        }
+    }
+
+    fun generateNewSession(): String {
+        this.sessionId = System.currentTimeMillis().toString()
+        return this.sessionId
+    }
+
+    fun reset() {
+
+    }
+
+    fun release() {
+        synchronized(this) {
+            Log.d(
+                tag,
+                "MNN_DEBUG release nativePtr: $nativePtr mGenerating: $generating"
+            )
+            if (!generating && !modelLoading) {
+                releaseInner()
+            } else {
+                releaseRequeted = true
+                while (generating || modelLoading) {
+                    try {
+                        (this as Object).wait()
+                    } catch (e: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        Log.e(tag, "Thread interrupted while waiting for release", e)
+                    }
+                }
+                releaseInner()
+            }
+        }
+    }
+
+    fun loadConfig(): ModelConfig? {
+        return ModelConfig.loadConfig(configPath, getModelSettingsFile())
+    }
+
+    fun getModelSettingsFile():String {
+        return FileUtils.getModelConfigDir(modelId) + "/custom_config.json"
+    }
+
+    private fun releaseInner() {
+        if (nativePtr != 0L) {
+            MNNEmbedding.releaseNative(nativePtr)
+            nativePtr = 0
+            (this as Object).notifyAll()
+        }
+    }
+
+    fun clearMmapCache() {
+        FileUtils.clearMmapCache(modelId)
+    }
+
+    fun updateMaxNewTokens(maxNewTokens: Int) {
+        MNNEmbedding.updateMaxNewTokensNative(nativePtr, maxNewTokens)
+    }
+
+    fun embedding(text: String): FloatArray {
+        return MNNEmbedding.embedding(nativePtr, text)
+    }
+
+    protected fun finalize() {
+        release()
+    }
+}

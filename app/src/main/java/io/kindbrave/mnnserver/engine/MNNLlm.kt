@@ -1,6 +1,6 @@
 package io.kindbrave.mnnserver.engine
 
-object MNN {
+object MNNLlm {
     external fun initNative(
         configPath: String?,
         mergedConfigStr: String?,
@@ -38,6 +38,8 @@ object MNN {
     external fun updateSystemPromptNative(llmPtr: Long, systemPrompt: String)
 
     external fun updateAssistantPromptNative(llmPtr: Long, assistantPrompt: String)
+
+    external fun embedding(llmPtr: Long, text: String)
 
     interface GenerateProgressListener {
         fun onProgress(progress: String?): Boolean

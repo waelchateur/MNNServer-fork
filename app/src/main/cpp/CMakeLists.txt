@@ -30,6 +30,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         embedding_mnn_jni.cpp
         diffusion_session.cpp
         llm_session.cpp
+        embedding_session.cpp
 )
 #mnn
 set (MNN_ROOT "${CMAKE_SOURCE_DIR}/../../../../../../../c/MNN")

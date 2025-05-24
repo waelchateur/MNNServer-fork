@@ -29,6 +29,8 @@ public:
 
     void SetAssistantPrompt(const std::string& assistant_prompt);
 
+    MNN::Express::VARP embedding(const std::string& text_cstr);
+
 private:
     std::string response_string_for_debug{};
     std::string model_path_;

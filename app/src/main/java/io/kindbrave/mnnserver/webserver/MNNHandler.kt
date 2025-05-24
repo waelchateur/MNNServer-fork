@@ -1,7 +1,7 @@
 package io.kindbrave.mnnserver.webserver
 
 import android.util.Log
-import io.kindbrave.mnnserver.engine.MNN
+import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
 import kotlinx.io.IOException
 import org.json.JSONArray
@@ -81,7 +81,7 @@ class MNNHandler @Inject constructor(
 
         runCatching {
             val history = buildChatHistory(messages)
-            chatSession.generate(history, object : MNN.GenerateProgressListener {
+            chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
                 override fun onProgress(progress: String?): Boolean {
                     return try {
                         if (progress == null) {

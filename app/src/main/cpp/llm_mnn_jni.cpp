@@ -38,7 +38,7 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
     __android_log_print(ANDROID_LOG_DEBUG, "MNN_DEBUG", "JNI_OnUnload");
 }
 
-JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_engine_MNN_initNative(JNIEnv* env,
+JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_initNative(JNIEnv* env,
                                                                                     jobject thiz,
                                                                                     jstring modelDir,
                                                                                     jstring mergeConfigStr,
@@ -69,11 +69,11 @@ JNIEXPORT jlong JNICALL Java_io_kindbrave_mnnserver_engine_MNN_initNative(JNIEnv
 }
 
 
-JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNN_submitNative(JNIEnv* env,
-                                                                                   jobject thiz,
-                                                                                   jlong llmPtr,
-                                                                                   jobject chatHistory,
-                                                                                   jobject
+JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_submitNative(JNIEnv* env,
+                                                                                                     jobject thiz,
+                                                                                                     jlong llmPtr,
+                                                                                                     jobject chatHistory,
+                                                                                                     jobject
                                                                                    progressListener) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llmPtr);
     if (!llm) {
@@ -158,10 +158,10 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNN_submitNative(JN
     return hashMap;
 }
 
-JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_resetNative(JNIEnv* env,
-                                                                               jobject thiz,
-                                                                               jlong object_ptr,
-                                                                               jboolean is_diffusion) {
+JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_resetNative(JNIEnv* env,
+                                                                             jobject thiz,
+                                                                             jlong object_ptr,
+                                                                             jboolean is_diffusion) {
     if (is_diffusion) {
         return;
     }
@@ -174,7 +174,7 @@ JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_resetNative(JNIEnv
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_setWavformCallbackNative(
+Java_io_kindbrave_mnnserver_engine_MNNLlm_setWavformCallbackNative(
         JNIEnv *env, jobject thiz, jlong instance_id, jobject listener) {
 
     if (instance_id == 0 || !listener) {
@@ -199,7 +199,7 @@ Java_io_kindbrave_mnnserver_engine_MNN_setWavformCallbackNative(
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_getDebugInfoNative(JNIEnv *env, jobject thiz, jlong objecPtr) {
+Java_io_kindbrave_mnnserver_engine_MNNLlm_getDebugInfoNative(JNIEnv *env, jobject thiz, jlong objecPtr) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(objecPtr);
     if (llm == nullptr) {
         return env->NewStringUTF("");
@@ -207,10 +207,10 @@ Java_io_kindbrave_mnnserver_engine_MNN_getDebugInfoNative(JNIEnv *env, jobject t
     return env->NewStringUTF(llm->getDebugInfo().c_str());
 }
 
-JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_releaseNative(JNIEnv* env,
-                                                                                      jobject thiz,
-                                                                                      jlong objecPtr,
-                                                                                      jboolean isDiffusion) {
+JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_releaseNative(JNIEnv* env,
+                                                                               jobject thiz,
+                                                                               jlong objecPtr,
+                                                                               jboolean isDiffusion) {
     MNN_DEBUG("Java_com_alibaba_mnnllm_android_ChatSession_releaseNative\n");
     if (isDiffusion) {
         auto* diffusion = reinterpret_cast<DiffusionSession*>(objecPtr);
@@ -222,13 +222,13 @@ JNIEXPORT void JNICALL Java_io_kindbrave_mnnserver_engine_MNN_releaseNative(JNIE
 }
 
 JNIEXPORT jobject JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_submitDiffusionNative(JNIEnv *env, jobject thiz,
-                                                                       jlong instance_id,
-                                                                       jstring input,
-                                                                       jstring joutput_path,
-                                                                       jint iter_num,
-                                                                       jint random_seed,
-                                                                       jobject progressListener) {
+Java_io_kindbrave_mnnserver_engine_MNNLlm_submitDiffusionNative(JNIEnv *env, jobject thiz,
+                                                                jlong instance_id,
+                                                                jstring input,
+                                                                jstring joutput_path,
+                                                                jint iter_num,
+                                                                jint random_seed,
+                                                                jobject progressListener) {
     auto* diffusion = reinterpret_cast<DiffusionSession*>(instance_id); // Cast back to Llm*
     if (!diffusion) {
         return nullptr;
@@ -265,9 +265,9 @@ Java_io_kindbrave_mnnserver_engine_MNN_submitDiffusionNative(JNIEnv *env, jobjec
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_updateMaxNewTokensNative(JNIEnv *env, jobject thiz,
-                                                                     jlong llm_ptr,
-                                                                     jint max_new_tokens) {
+Java_io_kindbrave_mnnserver_engine_MNNLlm_updateMaxNewTokensNative__JI(JNIEnv *env, jobject thiz,
+                                                                       jlong llm_ptr,
+                                                                       jint max_new_tokens) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
     if (llm) {
         llm->SetMaxNewTokens(max_new_tokens);
@@ -276,9 +276,9 @@ Java_io_kindbrave_mnnserver_engine_MNN_updateMaxNewTokensNative(JNIEnv *env, job
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_updateSystemPromptNative(JNIEnv *env, jobject thiz,
-                                                                     jlong llm_ptr,
-                                                                     jstring system_promp_j) {
+Java_io_kindbrave_mnnserver_engine_MNNLlm_updateSystemPromptNative(JNIEnv *env, jobject thiz,
+                                                                   jlong llm_ptr,
+                                                                   jstring system_promp_j) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
     const char* system_prompt_cstr = env->GetStringUTFChars(system_promp_j, nullptr);
     if (llm) {
@@ -288,13 +288,26 @@ Java_io_kindbrave_mnnserver_engine_MNN_updateSystemPromptNative(JNIEnv *env, job
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_io_kindbrave_mnnserver_engine_MNN_updateAssistantPromptNative(JNIEnv *env, jobject thiz,
-                                                                        jlong llm_ptr,
-                                                                        jstring assistant_prompt_j) {
+Java_io_kindbrave_mnnserver_engine_MNNLlm_updateAssistantPromptNative(JNIEnv *env, jobject thiz,
+                                                                      jlong llm_ptr,
+                                                                      jstring assistant_prompt_j) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
     const char* assistant_prompt_cstr = env->GetStringUTFChars(assistant_prompt_j, nullptr);
     if (llm) {
         llm->SetAssistantPrompt(assistant_prompt_cstr);
     }
     env->ReleaseStringUTFChars(assistant_prompt_j, assistant_prompt_cstr);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_io_kindbrave_mnnserver_engine_MNNLlm_embedding(JNIEnv *env, jobject thiz,
+                                                          jlong llm_ptr,
+                                                          jstring text) {
+    auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
+    const char* text_cstr = env->GetStringUTFChars(text, nullptr);
+    if (llm) {
+        MNN::Express::VARP r = llm->embedding(text_cstr);
+        r->getTensor()->printShape();
+    }
 }

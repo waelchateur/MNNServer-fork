@@ -19,6 +19,7 @@ import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
 import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.service.WebServerService
+import io.kindbrave.mnnserver.utils.ServiceUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,7 +74,6 @@ class MainViewModel @Inject constructor(
     }
 
     init {
-        // 监听模型列表变化
         viewModelScope.launch {
             llmService.loadedModelsState.collect { models ->
                 _loadedModelsCount.value = models.size
@@ -83,11 +83,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _serverPort.value = settingsRepository.getServerPort()
         }
-
         bindService()
-
         checkServiceStatus()
-
         updateSystemInfo()
     }
 
@@ -102,31 +99,31 @@ class MainViewModel @Inject constructor(
 
     fun startServer() {
         viewModelScope.launch {
-            WebServerService.Companion.startService(context, _serverPort.value)
+            val intent = Intent(context, WebServerService::class.java)
+            context.startService(intent)
+            _serverStatus.emit(WebServerService.ServerStatus.Running)
         }
     }
 
     fun stopServer() {
         viewModelScope.launch {
-            WebServerService.Companion.stopService(context)
+            val intent = Intent(context, WebServerService::class.java)
+            context.stopService(intent)
+            _serverStatus.emit(WebServerService.ServerStatus.Stopped)
         }
     }
 
     private fun checkServiceStatus() {
         viewModelScope.launch {
-            _isServiceRunning.value = _serverStatus.value is WebServerService.ServerStatus.Running
+            val isRunning = ServiceUtils.isServiceRunning(context, WebServerService::class.java)
+            if (isRunning) {
+                _serverStatus.emit(WebServerService.ServerStatus.Running)
+                _isServiceRunning.emit(true)
+            } else {
+                _serverStatus.emit(WebServerService.ServerStatus.Stopped)
+                _isServiceRunning.emit(false)
+            }
         }
-    }
-
-    private suspend fun startService() {
-        val port = _serverPort.value
-        startServer()
-        logRepository.addLog("Service started on port $port")
-    }
-
-    private suspend fun stopService() {
-        stopServer()
-        logRepository.addLog("Service stopped")
     }
 
     private fun updateSystemInfo() {

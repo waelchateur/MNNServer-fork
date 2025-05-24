@@ -4,38 +4,40 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.elvishew.xlog.XLog
 import dagger.hilt.android.AndroidEntryPoint
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.utils.LogManager
+import io.kindbrave.mnnserver.annotation.LogAfter
+import io.kindbrave.mnnserver.di.ApplicationScope
+import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.kindbrave.mnnserver.webserver.KtorServer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.io.IOException
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class WebServerService : Service() {
-    private val TAG = "WebServerService"
+    private val tag = WebServerService::class.simpleName
     private val NOTIFICATION_ID = 1001
     private val CHANNEL_ID = "mnn_server_channel"
 
     @Inject lateinit var server: KtorServer
+    @Inject lateinit var settingsRepository: SettingsRepository
+    @Inject
+    @ApplicationScope
+    lateinit var scope: CoroutineScope
 
     private val binder = LocalBinder()
     
     private val _serverStatus = MutableStateFlow<ServerStatus>(ServerStatus.Stopped)
     val serverStatus: StateFlow<ServerStatus> = _serverStatus
-    
-    // 修改addLog方法
-    private fun addLog(message: String) {
-        LogManager.addLog(message)
-    }
     
     inner class LocalBinder : Binder() {
         fun getService(): WebServerService = this@WebServerService
@@ -51,15 +53,7 @@ class WebServerService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
-            ACTION_START_SERVER -> {
-                val port = intent.getIntExtra(EXTRA_PORT, DEFAULT_PORT)
-                startServer(port)
-            }
-            ACTION_STOP_SERVER -> {
-                stopServer()
-            }
-        }
+        startServer()
         return START_NOT_STICKY
     }
     
@@ -80,30 +74,29 @@ class WebServerService : Service() {
             .setSmallIcon(R.drawable.ic_notification)
             .build()
     }
-    
-    fun startServer(port: Int) {
-        try {
-            server.port = port
-            server.start()
 
-            _serverStatus.value = ServerStatus.Running
-            addLog("服务已启动，端口: $port")
-
-            startForeground(NOTIFICATION_ID, createNotification("服务运行中，端口: $port"))
-        } catch (e: IOException) {
+    @LogAfter("")
+    private fun startServer() {
+        runCatching {
+            scope.launch(Dispatchers.IO) {
+                val port = settingsRepository.getServerPort()
+                launch(Dispatchers.Default) {
+                    server.port = port
+                    server.start()
+                    _serverStatus.value = ServerStatus.Running
+                    startForeground(NOTIFICATION_ID, createNotification("服务运行中，端口: $port"))
+                }
+            }
+        }.onFailure { e ->
             _serverStatus.value = ServerStatus.Error("启动服务失败: ${e.message}")
-            addLog("启动服务失败: ${e.message}")
-            Log.e(TAG, "启动服务失败", e)
+            XLog.tag(tag).e("startServer=>error", e)
         }
     }
     
     fun stopServer() {
-        if (::server.isInitialized) {
-            server.stop()
-        }
+        server.stop()
         _serverStatus.value = ServerStatus.Stopped
-        addLog("服务已停止")
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
     
@@ -116,27 +109,5 @@ class WebServerService : Service() {
         object Stopped : ServerStatus()
         object Running : ServerStatus()
         data class Error(val message: String) : ServerStatus()
-    }
-    
-    companion object {
-        const val ACTION_START_SERVER = "io.kindbrave.mnnserver.action.START_SERVER"
-        const val ACTION_STOP_SERVER = "io.kindbrave.mnnserver.action.STOP_SERVER"
-        const val EXTRA_PORT = "io.kindbrave.mnnserver.extra.PORT"
-        const val DEFAULT_PORT = 8080
-        
-        fun startService(context: Context, port: Int) {
-            val intent = Intent(context, WebServerService::class.java).apply {
-                action = ACTION_START_SERVER
-                putExtra(EXTRA_PORT, port)
-            }
-            context.startService(intent)
-        }
-        
-        fun stopService(context: Context) {
-            val intent = Intent(context, WebServerService::class.java).apply {
-                action = ACTION_STOP_SERVER
-            }
-            context.startService(intent)
-        }
     }
 }

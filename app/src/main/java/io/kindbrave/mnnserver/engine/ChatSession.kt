@@ -7,8 +7,8 @@ import android.util.Log
 import com.alibaba.mls.api.ApplicationProvider
 import com.google.gson.Gson
 import io.kindbrave.mnnserver.repository.SettingsRepository
-import io.kindbrave.mnnserver.engine.MNN.AudioDataListener
-import io.kindbrave.mnnserver.engine.MNN.GenerateProgressListener
+import io.kindbrave.mnnserver.engine.MNNLlm.AudioDataListener
+import io.kindbrave.mnnserver.engine.MNNLlm.GenerateProgressListener
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelConfig
 import io.kindbrave.mnnserver.utils.ModelPreferences
@@ -20,7 +20,7 @@ class ChatSession(
     var sessionId: String,
     private val configPath: String,
     private val isDiffusion: Boolean = false
-) {
+): Session() {
     private val tag = ChatSession::class.java.simpleName
 
     private val settingsRepository = SettingsRepository(ApplicationProvider.get())
@@ -69,7 +69,7 @@ class ChatSession(
             this.backendType = backend
         }
         Log.d(tag, "MNN_DEBUG load initNative")
-        nativePtr = MNN.initNative(
+        nativePtr = MNNLlm.initNative(
             configPath,
             if (extraConfig != null) {
                 Gson().toJson(extraConfig)
@@ -86,7 +86,7 @@ class ChatSession(
     }
 
     val debugInfo: String
-        get() = MNN.getDebugInfoNative(nativePtr) + "\n"
+        get() = MNNLlm.getDebugInfoNative(nativePtr) + "\n"
 
     fun generateNewSession(): String {
         this.sessionId = System.currentTimeMillis().toString()
@@ -100,7 +100,7 @@ class ChatSession(
         synchronized(this) {
             Log.d(tag, "MNN_DEBUG submit$history")
             generating = true
-            val result = MNN.submitNative(nativePtr, history, progressListener)
+            val result = MNNLlm.submitNative(nativePtr, history, progressListener)
             generating = false
             if (releaseRequeted) {
                 release()
@@ -119,7 +119,7 @@ class ChatSession(
         synchronized(this) {
             Log.d(tag, "MNN_DEBUG submit$input")
             generating = true
-            val result = MNN.submitDiffusionNative(
+            val result = MNNLlm.submitDiffusionNative(
                 nativePtr,
                 input,
                 output,
@@ -137,7 +137,7 @@ class ChatSession(
 
     fun reset() {
         synchronized(this) {
-            MNN.resetNative(nativePtr, isDiffusion)
+            MNNLlm.resetNative(nativePtr, isDiffusion)
         }
     }
 
@@ -177,7 +177,7 @@ class ChatSession(
 
     private fun releaseInner() {
         if (nativePtr != 0L) {
-            MNN.releaseNative(nativePtr, isDiffusion)
+            MNNLlm.releaseNative(nativePtr, isDiffusion)
             nativePtr = 0
             (this as Object).notifyAll()
         }
@@ -190,7 +190,7 @@ class ChatSession(
     fun setAudioDataListener(listener: AudioDataListener?) {
         synchronized(this) {
             if (nativePtr != 0L) {
-                MNN.setWavformCallbackNative(nativePtr, listener)
+                MNNLlm.setWavformCallbackNative(nativePtr, listener)
             } else {
                 Log.e(tag, "nativePtr null")
             }
@@ -198,16 +198,20 @@ class ChatSession(
     }
 
     fun updateMaxNewTokens(maxNewTokens: Int) {
-        MNN.updateMaxNewTokensNative(nativePtr, maxNewTokens)
+        MNNLlm.updateMaxNewTokensNative(nativePtr, maxNewTokens)
     }
 
     fun updateSystemPrompt(systemPrompt: String) {
-        MNN.updateSystemPromptNative(nativePtr, systemPrompt)
+        MNNLlm.updateSystemPromptNative(nativePtr, systemPrompt)
     }
 
     fun updateAssistantPrompt(assistantPrompt: String) {
         extraAssistantPrompt = assistantPrompt
-        MNN.updateAssistantPromptNative(nativePtr, assistantPrompt)
+        MNNLlm.updateAssistantPromptNative(nativePtr, assistantPrompt)
+    }
+
+    fun embedding(text: String) {
+        MNNLlm.embedding(nativePtr, text)
     }
 
     protected fun finalize() {
