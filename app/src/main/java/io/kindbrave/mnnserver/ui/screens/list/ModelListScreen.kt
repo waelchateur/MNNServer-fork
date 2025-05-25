@@ -1,4 +1,4 @@
-package io.kindbrave.mnnserver.ui.screens.download
+package io.kindbrave.mnnserver.ui.screens.list
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -81,7 +78,7 @@ fun ModelListScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.download_models)) },
+                title = { Text(stringResource(R.string.model_list)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
@@ -89,16 +86,16 @@ fun ModelListScreen(navController: NavHostController) {
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                folderPicker.launch(null)
-            }) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.import_model)
-                )
-            }
-        },
+//        floatingActionButton = {
+//            FloatingActionButton(onClick = {
+//                folderPicker.launch(null)
+//            }) {
+//                Icon(
+//                    Icons.Default.Add,
+//                    contentDescription = stringResource(R.string.import_model)
+//                )
+//            }
+//        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
@@ -108,9 +105,9 @@ fun ModelListScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(userUploadModels.size) { index ->
-                UserUploadModelItemView(model = userUploadModels[index], loadedModels.contains(userUploadModels[index].id))
-            }
+//            items(userUploadModels.size) { index ->
+//                UserUploadModelItemView(model = userUploadModels[index], loadedModels.contains(userUploadModels[index].id))
+//            }
             items(downloadModels.size) { index ->
                 DownloadModelItemView(model = downloadModels[index], loadedModels.contains(downloadModels[index].modelId))
             }

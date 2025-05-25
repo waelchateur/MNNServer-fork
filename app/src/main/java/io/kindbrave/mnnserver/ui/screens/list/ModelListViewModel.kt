@@ -1,4 +1,4 @@
-package io.kindbrave.mnnserver.ui.screens.download
+package io.kindbrave.mnnserver.ui.screens.list
 
 import android.content.Context
 import android.net.Uri
@@ -8,16 +8,15 @@ import com.alibaba.mls.api.ModelItem
 import com.alibaba.mls.api.download.DownloadInfo
 import com.alibaba.mls.api.download.DownloadInfo.DownloadSate
 import com.alibaba.mls.api.download.DownloadListener
-import com.elvishew.xlog.XLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.engine.ChatSession
 import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
 import io.kindbrave.mnnserver.repository.model.MNNModelDownloadRepository
 import io.kindbrave.mnnserver.repository.model.MNNModelRepository
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.utils.ModelNameUtils
+import io.kindbrave.mnnserver.utils.ModelUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,11 +67,11 @@ class ModelListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _getDownloadModelState.emit(GetDownloadModelState.Loading)
             mnnModelDownloadRepository.loadFromCache()?.let { items ->
-                _downloadModels.emit(items)
+                _downloadModels.emit(ModelUtils.processList(items))
             }
             mnnModelDownloadRepository.requestRepoList(
                 onSuccess = {
-                    _downloadModels.value = it
+                    _downloadModels.value = ModelUtils.processList(it)
                     _getDownloadModelState.value = GetDownloadModelState.Success
                 },
                 onFailure = {

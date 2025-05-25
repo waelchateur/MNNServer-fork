@@ -42,7 +42,7 @@
 -keepattributes Signature
 -keepattributes Exceptions
 
--keep class io.kindbrave.mnnserver.ui.screens.download.** {*;}
+-keep class io.kindbrave.mnnserver.ui.screens.list.** {*;}
 
 -dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
 -dontwarn io.netty.internal.tcnative.AsyncTask

@@ -26,18 +26,30 @@ class MNNModelRepository @Inject constructor(
         if (llmService.isModelLoaded(model.modelId.toString())) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
         val modelPath = modelDownloadManager.getDownloadPath(model.modelId!!)
-        llmService.createChatSession(
-            modelId = model.modelId!!,
-            modelDir = modelPath.path,
-            sessionId = model.modelId!!
-        )
+        if (model.getTags().contains("embedding")) {
+            llmService.createEmbeddingSession(
+                modelId = model.modelId!!,
+                modelDir = modelPath.path,
+                sessionId = model.modelId!!
+            )
+        } else {
+            llmService.createChatSession(
+                modelId = model.modelId!!,
+                modelDir = modelPath.path,
+                sessionId = model.modelId!!
+            )
+        }
     }
 
     @LogAfter("")
     suspend fun unloadModel(model: ModelItem) {
         if (llmService.isModelLoaded(model.modelId.toString()).not()) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
-        llmService.removeChatSession(model.modelId!!)
+        if (model.getTags().contains("embedding")) {
+            llmService.removeEmbeddingSession(model.modelId!!)
+        } else {
+            llmService.removeChatSession(model.modelId!!)
+        }
     }
 
     fun isModelLoaded(model: ModelItem): Boolean {

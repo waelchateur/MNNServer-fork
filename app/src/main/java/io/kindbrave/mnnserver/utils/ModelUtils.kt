@@ -68,6 +68,7 @@ object ModelUtils {
     private val hotList: MutableSet<String> = HashSet()
     private val goodList: MutableSet<String> = HashSet()
     private val blackList: MutableSet<String> = HashSet()
+    private val embeddingList: MutableSet<String> = HashSet()
 
     /**
      * you can add ModelItem.fromLocalModel("Qwen-Omni-7B", "/data/local/tmp/omni_test/model")
@@ -77,8 +78,6 @@ object ModelUtils {
 
 
     init {
-        blackList.add("taobao-mnn/bge-large-zh-MNN") //embedding
-        blackList.add("taobao-mnn/gte_sentence-embedding_multilingual-base-MNN") //embedding
         blackList.add("taobao-mnn/QwQ-32B-Preview-MNN") //too big
         blackList.add("taobao-mnn/codegeex2-6b-MNN") //not for chat
         blackList.add("taobao-mnn/chatglm-6b-MNN") //deprecated
@@ -100,6 +99,11 @@ object ModelUtils {
         goodList.add("taobao-mnn/gemma-2-2b-it-MNN")
     }
 
+    init {
+        embeddingList.add("taobao-mnn/bge-large-zh-MNN") //embedding
+        embeddingList.add("taobao-mnn/gte_sentence-embedding_multilingual-base-MNN") //embedding
+    }
+
     private fun isBlackListPattern(modelName: String): Boolean {
         return modelName.contains("qwen1.5")
                 || modelName.contains("qwen-1")
@@ -118,6 +122,7 @@ object ModelUtils {
         val goodItems: MutableList<ModelItem> = ArrayList()
         val recommendedItems: MutableList<ModelItem> = ArrayList()
         val chatItems: MutableList<ModelItem> = ArrayList()
+        val embeddingItems: MutableList<ModelItem> = ArrayList()
         val otherItems: MutableList<ModelItem> = ArrayList()
         for (item in hfModelItems) {
             val modelIdLowerCase = item.modelId!!.lowercase(Locale.getDefault())
@@ -130,6 +135,9 @@ object ModelUtils {
                 goodItems.add(item)
             } else if (modelIdLowerCase.contains("chat")) { //optimized for chat, should at top
                 chatItems.add(item)
+            } else if (embeddingList.contains(item.modelId)) {
+                item.addTag("embedding")
+                embeddingItems.add(item)
             } else {
                 otherItems.add(item)
             }
@@ -139,6 +147,7 @@ object ModelUtils {
         result.addAll(recommendedItems)
         result.addAll(goodItems)
         result.addAll(chatItems)
+        result.addAll(embeddingItems)
         result.addAll(otherItems)
         return result
     }

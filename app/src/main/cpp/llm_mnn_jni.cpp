@@ -300,14 +300,21 @@ Java_io_kindbrave_mnnserver_engine_MNNLlm_updateAssistantPromptNative(JNIEnv *en
 }
 
 extern "C"
-JNIEXPORT void JNICALL
+JNIEXPORT jfloatArray JNICALL
 Java_io_kindbrave_mnnserver_engine_MNNLlm_embedding(JNIEnv *env, jobject thiz,
                                                           jlong llm_ptr,
                                                           jstring text) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llm_ptr);
     const char* text_cstr = env->GetStringUTFChars(text, nullptr);
+    jfloatArray result = nullptr;
     if (llm) {
-        MNN::Express::VARP r = llm->embedding(text_cstr);
-        r->getTensor()->printShape();
+        MNN::Express::VARP vec_0 = llm->embedding(text_cstr);
+        auto size = vec_0->getInfo()->size;
+        auto ptr = vec_0->readMap<float>();
+
+        result = env->NewFloatArray(size);
+        env->SetFloatArrayRegion(result, 0, size, ptr);
     }
+    env->ReleaseStringUTFChars(text, text_cstr);
+    return result;
 }

@@ -42,10 +42,11 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <provider
-            android:authorities="${applicationId}.provider"
-            android:name=".provider.AistProvider"
-            android:exported="true"/>
+        <service
+            android:name=".service.AistService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="specialUse" />
     </application>
 
 </manifest>

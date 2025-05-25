@@ -19,6 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class LLMService @Inject constructor() {
     private val chatSessionMap = mutableMapOf<String, ChatSession>()
+    private val embeddingSessionMap = mutableMapOf<String, EmbeddingSession>()
     private val _loadedModelsState: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val loadedModelsState: StateFlow<Set<String>> = _loadedModelsState
 
@@ -32,92 +33,78 @@ class LLMService @Inject constructor() {
             finalSessionId = System.currentTimeMillis().toString()
         }
 
-        val embeddingSession  = EmbeddingSession(
-            modelId = modelId,
-            sessionId = finalSessionId,
-            configPath = "$modelDir/config.json",
-        )
-
-        embeddingSession.load()
-        val r = embeddingSession.embedding("hello how are you")
-        XLog.d("embedding result: ${r.contentToString()}")
-
         val session = ChatSession(
             modelId = modelId,
             sessionId = finalSessionId,
             configPath = "$modelDir/config.json",
         )
 
-        // session.load()
+        session.load()
 
         chatSessionMap[modelId] = session
         _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { add(modelId) })
         return session
     }
-    
-//    @Synchronized
-//    fun createEmbeddingSession(
-//        modelId: String,
-//        modelDir: String,
-//        useTmpPath: Boolean,
-//        sessionId: String
-//    ): EmbeddingSession {
-//        var finalSessionId = sessionId
-//        if (TextUtils.isEmpty(finalSessionId)) {
-//            finalSessionId = System.currentTimeMillis().toString()
-//        }
-//
-//        val session = EmbeddingSession(
-//            modelId = modelId,
-//            sessionId = finalSessionId,
-//            configPath = "$modelDir/config.json",
-//            useTmpPath = useTmpPath
-//        )
-//        session.load()
-//
-//        embeddingSessionMap[modelId] = session
-//        return session
-//    }
+
+    suspend fun createEmbeddingSession(
+        modelId: String,
+        modelDir: String,
+        sessionId: String
+    ): EmbeddingSession {
+        var finalSessionId = sessionId
+        if (TextUtils.isEmpty(finalSessionId)) {
+            finalSessionId = System.currentTimeMillis().toString()
+        }
+
+        val session = EmbeddingSession(
+            modelId = modelId,
+            sessionId = finalSessionId,
+            configPath = "$modelDir/config.json",
+        )
+        session.load()
+
+        embeddingSessionMap[modelId] = session
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { add(modelId) })
+        return session
+    }
 
     fun getChatSession(modelId: String): ChatSession? {
         return chatSessionMap[modelId]
     }
-    
-//    @Synchronized
-//    fun getEmbeddingSession(modelId: String): EmbeddingSession? {
-//        return embeddingSessionMap[modelId]
-//    }
+
+    fun getEmbeddingSession(modelId: String): EmbeddingSession? {
+        return embeddingSessionMap[modelId]
+    }
 
     suspend fun removeChatSession(modelId: String) {
         chatSessionMap[modelId]?.release()
         chatSessionMap.remove(modelId)
         _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
     }
-    
-//    @Synchronized
-//    fun removeEmbeddingSession(modelId: String) {
-//        embeddingSessionMap[modelId]?.release()
-//        embeddingSessionMap.remove(modelId)
-//    }
+
+    suspend fun removeEmbeddingSession(modelId: String) {
+        embeddingSessionMap[modelId]?.release()
+        embeddingSessionMap.remove(modelId)
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
+    }
 
     fun getAllChatSessions(): List<ChatSession> {
         return chatSessionMap.values.toList()
     }
-    
-//    @Synchronized
-//    fun getAllEmbeddingSessions(): List<EmbeddingSession> {
-//        return embeddingSessionMap.values.toList()
-//    }
+
+    fun getAllEmbeddingSessions(): List<EmbeddingSession> {
+        return embeddingSessionMap.values.toList()
+    }
 
     suspend fun releaseAllSessions() {
         chatSessionMap.values.forEach { it.release() }
         chatSessionMap.clear()
+        embeddingSessionMap.values.forEach { it.release() }
+        embeddingSessionMap.clear()
         _loadedModelsState.emit(emptySet())
-        // embeddingSessionMap.values.forEach { it.release() }
-        // embeddingSessionMap.clear()
     }
 
     fun isModelLoaded(modelId: String): Boolean {
-        return chatSessionMap.containsKey(modelId)
+        return chatSessionMap.containsKey(modelId) || embeddingSessionMap.containsKey(modelId)
     }
 }

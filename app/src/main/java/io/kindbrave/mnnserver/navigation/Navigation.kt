@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.kindbrave.mnnserver.ui.screens.download.ModelListScreen
+import io.kindbrave.mnnserver.ui.screens.list.ModelListScreen
 import io.kindbrave.mnnserver.ui.screens.log.LogsScreen
 import io.kindbrave.mnnserver.ui.screens.main.MainScreen
 import io.kindbrave.mnnserver.ui.screens.settings.SettingsScreen
