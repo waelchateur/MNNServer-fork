@@ -20,7 +20,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     init {
         viewModelScope.launch {
-            _serverPort.value = settingsRepository.getServerPort()
+            _serverPort.emit(settingsRepository.getServerPort())
+            _exportWebPort.emit(settingsRepository.getExportWebPort())
         }
     }
 
