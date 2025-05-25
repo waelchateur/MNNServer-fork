@@ -1,10 +1,10 @@
 package io.kindbrave.mnnserver.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.alibaba.mls.api.source.ModelSources
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnnserver.utils.DiffusionMemoryMode
 import kotlinx.coroutines.flow.first
@@ -20,6 +20,7 @@ class SettingsRepository @Inject constructor(
         private val SERVER_PORT_KEY = intPreferencesKey("server_port")
         private val DIFFUSION_MEMORY_MODE_KEY = stringPreferencesKey("diffusion_memory_mode")
         private val DOWNLOAD_PROVIDER_KEY = stringPreferencesKey("download_provider")
+        private val EXPORT_WEB_PORT = booleanPreferencesKey("export_web_port")
         private const val DEFAULT_SERVER_PORT = 8080
     }
 
@@ -51,5 +52,15 @@ class SettingsRepository @Inject constructor(
 
     suspend fun getDownloadProvider() = context.dataStore.data.map { preferences ->
             preferences[DOWNLOAD_PROVIDER_KEY] ?: "ModelScope"
+        }.first()
+
+    suspend fun setExportWebPort(enable: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[EXPORT_WEB_PORT] = enable
+        }
+    }
+
+    suspend fun getExportWebPort() = context.dataStore.data.map { preferences ->
+        preferences[EXPORT_WEB_PORT] == true
         }.first()
 }

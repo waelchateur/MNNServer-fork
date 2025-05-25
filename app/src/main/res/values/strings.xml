@@ -43,4 +43,10 @@
     <string name="loading_model_list">Loading Model List</string>
     <string name="loading_model_no_name">Loading Model</string>
     <string name="delete_model">Delete Model</string>
+    <string name="filter_model">Filter Model</string>
+    <string name="all">All</string>
+    <string name="chat">Chat</string>
+    <string name="embedding">Embedding</string>
+    <string name="export_web_port">Export Web Port</string>
+    <string name="export_web_port_description">After enabling, the service will be exposed to the internet</string>
 </resources>

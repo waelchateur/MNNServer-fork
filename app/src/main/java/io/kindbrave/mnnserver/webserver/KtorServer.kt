@@ -1,5 +1,7 @@
 package io.kindbrave.mnnserver.webserver
 
+import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.ktor.http.CacheControl
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -17,17 +19,23 @@ import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class KtorServer @Inject constructor(
     private val mnnHandler: MNNHandler,
+    private val settingsRepository: SettingsRepository
 ) {
+    private val tag = KtorServer::class.simpleName
     var port = 8080
 
     private val server by lazy {
-        embeddedServer(Netty, port) {
+        val exportWebPort = runBlocking {
+            settingsRepository.getExportWebPort()
+        }
+        embeddedServer(Netty, port, host = if (exportWebPort) "0.0.0.0" else "localhost") {
             install(CallLogging)
 
             routing {
@@ -59,7 +67,13 @@ class KtorServer @Inject constructor(
     }
 
     fun start() {
-        CoroutineScope(Dispatchers.IO).launch { server.start(true) }
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                server.start(true)
+            }.onFailure { e ->
+                XLog.tag(tag).e("start:onFailure:$e")
+            }
+        }
     }
 
     fun stop() {

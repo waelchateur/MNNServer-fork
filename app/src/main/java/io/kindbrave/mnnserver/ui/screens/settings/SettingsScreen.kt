@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel()
 ) {
     val serverPort by viewModel.serverPort.collectAsState()
+    val exportWebPort by viewModel.exportWebPort.collectAsState()
     var showPortSettingsDialog by remember { mutableStateOf(false) }
     
     Scaffold(
@@ -67,6 +69,23 @@ fun SettingsScreen(
                     contentDescription = null
                 ) },
                 modifier = Modifier.clickable { showPortSettingsDialog = true }
+            )
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.export_web_port)) },
+                supportingContent = { Text(stringResource(R.string.export_web_port_description))},
+                leadingContent = { Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(R.drawable.export),
+                    contentDescription = null
+                ) },
+                trailingContent = {
+                    Switch(
+                        checked = exportWebPort,
+                        onCheckedChange = { viewModel.setExportWebPort(it) }
+                    )
+                },
+                modifier = Modifier.clickable { viewModel.setExportWebPort(exportWebPort.not()) }
             )
             
             ListItem(

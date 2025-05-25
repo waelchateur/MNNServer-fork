@@ -43,4 +43,10 @@
     <string name="loading_model_list">加载模型列表</string>
     <string name="loading_model_no_name">加载模型</string>
     <string name="delete_model">删除模型</string>
+    <string name="filter_model">过滤模型</string>
+    <string name="all">全部</string>
+    <string name="chat">对话模型</string>
+    <string name="embedding">向量模型</string>
+    <string name="export_web_port">暴露服务端口</string>
+    <string name="export_web_port_description">启用后，服务将暴露到外网</string>
 </resources> 

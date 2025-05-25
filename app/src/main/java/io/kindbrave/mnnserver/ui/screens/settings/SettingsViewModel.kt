@@ -15,6 +15,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _serverPort = MutableStateFlow(0)
     val serverPort: StateFlow<Int> = _serverPort.asStateFlow()
 
+    private val _exportWebPort = MutableStateFlow(false)
+    val exportWebPort: StateFlow<Boolean> = _exportWebPort.asStateFlow()
+
     init {
         viewModelScope.launch {
             _serverPort.value = settingsRepository.getServerPort()
@@ -25,6 +28,19 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settingsRepository.setServerPort(port)
             _serverPort.value = port
+        }
+    }
+
+    fun getExportWebPort() {
+        viewModelScope.launch {
+            _exportWebPort.emit(settingsRepository.getExportWebPort())
+        }
+    }
+
+    fun setExportWebPort(enable: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setExportWebPort(enable)
+            _exportWebPort.emit(enable)
         }
     }
 }
