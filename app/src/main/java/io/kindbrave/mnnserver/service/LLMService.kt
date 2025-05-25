@@ -7,6 +7,7 @@ import android.text.TextUtils
 import com.elvishew.xlog.XLog
 import io.kindbrave.mnnserver.engine.ChatSession
 import io.kindbrave.mnnserver.engine.EmbeddingSession
+import io.kindbrave.mnnserver.engine.Session
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,6 +87,10 @@ class LLMService @Inject constructor() {
         embeddingSessionMap[modelId]?.release()
         embeddingSessionMap.remove(modelId)
         _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
+    }
+
+    fun getAllSessions(): List<Session> {
+        return chatSessionMap.values.toList() + embeddingSessionMap.values.toList()
     }
 
     fun getAllChatSessions(): List<ChatSession> {

@@ -44,7 +44,14 @@ class KtorServer @Inject constructor(
                             mnnHandler.completions(call.receiveText(), this)
                         }
                     }.onFailure { e ->
-                        call.response.status(HttpStatusCode(400, e.message ?: "Unknown error"))
+                        call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
+                    }
+                }
+                post("/v1/embeddings") {
+                    runCatching {
+                        call.respondText(mnnHandler.embeddings(call.receiveText()).toString())
+                    }.onFailure {
+                        call.response.status(HttpStatusCode(500, it.message ?: "Unknown error"))
                     }
                 }
             }

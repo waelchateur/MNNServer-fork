@@ -16,11 +16,11 @@ import io.kindbrave.mnnserver.utils.ModelUtils
 import java.io.File
 
 class ChatSession(
-    internal val modelId: String,
-    var sessionId: String,
-    private val configPath: String,
+    override val modelId: String,
+    override var sessionId: String,
+    override val configPath: String,
     private val isDiffusion: Boolean = false
-): Session() {
+): Session(modelId, sessionId, configPath) {
     private val tag = ChatSession::class.java.simpleName
 
     private val settingsRepository = SettingsRepository(ApplicationProvider.get())

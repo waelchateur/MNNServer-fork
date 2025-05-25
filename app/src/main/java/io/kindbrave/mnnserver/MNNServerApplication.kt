@@ -31,6 +31,6 @@ class MNNServerApplication : Application() {
             .build()
         val config = LogConfiguration.Builder()
             .build()
-        XLog.init(config)
+        XLog.init(config, filePrinter)
     }
 }

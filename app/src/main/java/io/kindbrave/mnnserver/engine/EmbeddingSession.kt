@@ -13,10 +13,10 @@ import io.kindbrave.mnnserver.utils.ModelPreferences
 import java.io.File
 
 class EmbeddingSession(
-    internal val modelId: String,
-    var sessionId: String,
-    private val configPath: String
-): Session() {
+    override val modelId: String,
+    override var sessionId: String,
+    override val configPath: String,
+): Session(modelId, sessionId, configPath) {
     private val tag = EmbeddingSession::class.java.simpleName
 
     private val settingsRepository = SettingsRepository(ApplicationProvider.get())

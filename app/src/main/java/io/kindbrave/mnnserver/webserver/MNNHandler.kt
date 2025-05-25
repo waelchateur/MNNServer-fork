@@ -1,6 +1,9 @@
 package io.kindbrave.mnnserver.webserver
 
 import android.util.Log
+import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.annotation.LogAfter
+import io.kindbrave.mnnserver.annotation.LogBefore
 import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
 import kotlinx.io.IOException
@@ -18,13 +21,12 @@ class MNNHandler @Inject constructor(
 ) {
     private val tag = MNNHandler::class.java.simpleName
 
-    suspend fun getModels(): JSONObject {
+    fun getModels(): JSONObject {
         val response = JSONObject()
         val modelsArray = JSONArray()
 
-        // 获取所有已加载的模型
-        val chatSessions = llmService.getAllChatSessions()
-        chatSessions.forEach { session ->
+        val sessions = llmService.getAllSessions()
+        sessions.forEach { session ->
             val modelJson = JSONObject()
             modelJson.put("id", session.modelId)
             modelJson.put("object", "model")
@@ -61,19 +63,20 @@ class MNNHandler @Inject constructor(
         return response
     }
 
-    suspend fun completions(requestJson: String, writer: Writer) {
+    @LogBefore("")
+    fun completions(requestJson: String, writer: Writer) {
         val jsonBody = JSONObject(requestJson)
 
         val modelId = jsonBody.optString("model", "")
         val messages = jsonBody.optJSONArray("messages")
 
         if (modelId.isEmpty() || messages == null || messages.length() == 0) {
-            throw InvalidParameterException("ModelId is null")
+            throw InvalidParameterException("please give modelId or messages params")
         }
 
         val chatSession = llmService.getChatSession(modelId)
         if (chatSession == null) {
-            throw InvalidParameterException("ChatSession is null")
+            throw InvalidParameterException("this model can not completion")
         }
 
         val messageId = UUID.randomUUID().toString()
@@ -85,7 +88,6 @@ class MNNHandler @Inject constructor(
                 override fun onProgress(progress: String?): Boolean {
                     return try {
                         if (progress == null) {
-                            // Send final chunk
                             val lastChunk = JSONObject()
                                 .put("id", "chatcmpl-$messageId")
                                 .put("object", "chat.completion.chunk")
@@ -126,8 +128,42 @@ class MNNHandler @Inject constructor(
                 }
             })
         }.onFailure { e ->
-            Log.e(tag, e.toString())
+            XLog.tag(tag).e("completions:onFailure:$e")
         }
+    }
+
+    @LogBefore("")
+    fun embeddings(requestJson: String): JSONObject {
+        val jsonBody = JSONObject(requestJson)
+
+        val modelId = jsonBody.optString("model", "")
+        val input = jsonBody.optJSONArray("input")
+
+        if (modelId.isEmpty() || input == null || input.length() == 0) {
+            throw InvalidParameterException("please give modelId or input params")
+        }
+
+        val embeddingSession = llmService.getEmbeddingSession(modelId)
+        if (embeddingSession == null) {
+            throw InvalidParameterException("this model can not embedding")
+        }
+
+        runCatching {
+            val embedding = embeddingSession.embedding(input.getString(0))
+            val result = JSONObject()
+                .put("object", "list")
+                .put("data", JSONArray().put(
+                    JSONObject()
+                        .put("object", "embedding")
+                        .put("embedding", JSONArray(embedding))
+                        .put("index", 0)
+                ))
+                .put("model", modelId)
+            return result
+        }.onFailure { e ->
+            XLog.tag(tag).e("embeddings:onFailure:$e")
+        }
+        throw Exception("embedding error")
     }
 
     private fun buildChatHistory(messages: JSONArray): ArrayList<Pair<String, String>> {
