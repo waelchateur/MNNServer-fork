@@ -11,16 +11,14 @@ import java.util.Locale
 
 class LogRepository(private val context: Context) {
     companion object {
-        const val LOG_RESET_MARKER = "=== LOG RESET ===\n"
-        private const val LOG_FILE_NAME = "mnn_server_logs.txt"
-        private const val MAX_LOG_SIZE = 1024 * 1024 // 1MB
+        private const val LOG_FILE_NAME = "log.txt"
     }
     
     private val _logs = MutableStateFlow<List<String>>(emptyList())
     val logs: Flow<List<String>> = _logs.asStateFlow()
     
     private val logFile: File
-        get() = File(context.filesDir, LOG_FILE_NAME)
+        get() = File("${context.filesDir}/logs", LOG_FILE_NAME)
     
     init {
         loadLogs()
@@ -32,28 +30,9 @@ class LogRepository(private val context: Context) {
             _logs.value = logContent.lines().filter { it.isNotBlank() }
         }
     }
-    
-    suspend fun addLog(message: String) {
-        val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-            .format(Date())
-        val logMessage = "[$timestamp] $message"
-        
-        val currentLogs = _logs.value.toMutableList()
-        currentLogs.add(logMessage)
-        
-        // 限制日志大小
-        if (currentLogs.size > MAX_LOG_SIZE) {
-            currentLogs.removeAt(0)
-        }
-        
-        _logs.value = currentLogs
-        
-        // 写入文件
-        logFile.writeText(currentLogs.joinToString("\n"))
-    }
-    
-    suspend fun clearLogs() {
+
+    fun clearLogs() {
         _logs.value = emptyList()
-        logFile.writeText(LOG_RESET_MARKER)
+        logFile.writeText("")
     }
 } 
