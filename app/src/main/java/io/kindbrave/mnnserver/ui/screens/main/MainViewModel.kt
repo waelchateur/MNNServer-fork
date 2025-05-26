@@ -37,7 +37,6 @@ class MainViewModel @Inject constructor(
 
     private val tag = MainViewModel::class.java.simpleName
     private val settingsRepository = SettingsRepository(context)
-    private val logRepository = LogRepository(context)
 
     private val _serverStatus =
         MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
@@ -80,10 +79,7 @@ class MainViewModel @Inject constructor(
             llmService.loadedModelsState.collect { models ->
                 _loadedModelsCount.value = models.size
             }
-        }
-
-        viewModelScope.launch {
-            _serverPort.value = settingsRepository.getServerPort()
+            _serverPort.emit(settingsRepository.getServerPort())
         }
         bindService()
         checkServiceStatus()
@@ -118,6 +114,7 @@ class MainViewModel @Inject constructor(
 
     fun startServer() {
         viewModelScope.launch {
+            _serverPort.emit(settingsRepository.getServerPort())
             val intent = Intent(context, WebServerService::class.java)
             context.startService(intent)
             _serverStatus.emit(WebServerService.ServerStatus.Running)
