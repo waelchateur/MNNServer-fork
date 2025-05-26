@@ -73,8 +73,7 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_submitNative
                                                                                                      jobject thiz,
                                                                                                      jlong llmPtr,
                                                                                                      jobject chatHistory,
-                                                                                                     jobject
-                                                                                   progressListener) {
+                                                                                                     jobject progressListener) {
     auto* llm = reinterpret_cast<mls::LlmSession*>(llmPtr);
     if (!llm) {
         return env->NewStringUTF("Failed, Chat is not ready!");
@@ -91,13 +90,11 @@ JNIEXPORT jobject JNICALL Java_io_kindbrave_mnnserver_engine_MNNLlm_submitNative
         return env->NewStringUTF("Failed, ChatHistory is not ready!");
     }
 
-    // 获取 List 类和方法
     jclass listClass = env->GetObjectClass(chatHistory);
     jmethodID sizeMethod = env->GetMethodID(listClass, "size", "()I");
     jmethodID getMethod = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
     jint size = env->CallIntMethod(chatHistory, sizeMethod);
 
-    // 获取 android.util.Pair 类和字段
     jclass pairClass = env->FindClass("kotlin/Pair");
     jfieldID firstField = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
     jfieldID secondField = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");

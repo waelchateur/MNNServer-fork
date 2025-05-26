@@ -13,7 +13,7 @@ class LogBeforeInterceptCut : BasePointCut<LogBefore> {
         val tag = joinPoint.targetClass.simpleName
         val methodName = joinPoint.targetMethod.name
         val args = joinPoint.args?.joinToString(", ") { it.toString() }
-        XLog.tag(tag).d("$methodName:${anno.message} args=$args")
+        XLog.tag(tag).d("$methodName:${anno.message} before args=$args")
         return joinPoint.proceed()
     }
 }

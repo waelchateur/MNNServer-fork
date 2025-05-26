@@ -49,7 +49,12 @@ class KtorServer @Inject constructor(
                     call.response.cacheControl(CacheControl.NoCache(null))
                     runCatching {
                         call.respondTextWriter(contentType = ContentType.Text.EventStream) {
-                            mnnHandler.completions(call.receiveText(), this)
+                            runCatching {
+                                mnnHandler.completions(call.receiveText(), this)
+                            }.onFailure { e ->
+                                XLog.tag(tag).e("completions:onFailure:$e")
+                                call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
+                            }
                         }
                     }.onFailure { e ->
                         call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))

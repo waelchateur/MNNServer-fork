@@ -22,9 +22,10 @@
 
 -keep class io.netty.** {*;}
 
+# mls.api
+-keep class com.alibaba.mls.api.** {*;}
+
 # gson
--keep class com.alibaba.mls.api.HfFileMetadata {*;}
--keep class com.alibaba.mls.api.ModelItem {*;}
 -keep class com.google.gson.reflect.TypeToken {*;}
 -keep class * extends com.google.gson.reflect.TypeToken
 -keepattributes AnnotationDefault, RuntimeVisibleAnnotations
@@ -43,6 +44,10 @@
 -keepattributes Exceptions
 
 -keep class io.kindbrave.mnnserver.ui.screens.list.** {*;}
+
+-keep class io.kindbrave.mnnserver.engine.** {*;}
+
+-keep class kotlin.Pair { *; }
 
 -dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
 -dontwarn io.netty.internal.tcnative.AsyncTask

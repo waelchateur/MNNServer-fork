@@ -40,6 +40,8 @@ import com.alibaba.mls.api.ms.MsRepoInfo
 import com.alibaba.mls.api.source.ModelSources
 import com.alibaba.mls.api.source.RepoConfig
 import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.annotation.LogAfter
+import io.kindbrave.mnnserver.annotation.LogBefore
 import io.kindbrave.mnnserver.utils.FileUtils.clearMmapCache
 import okhttp3.OkHttpClient
 import retrofit2.Call

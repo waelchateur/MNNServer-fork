@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8bb8d66c-1b62-4119-86c9-c92be595cd77" name="Changes" comment="Support delete download model">
+      <change afterPath="$PROJECT_DIR$/app/src/main/aidl/io/kindbrave/mnnserver/service/IAistService.aidl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/cpp/embedding_session.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/cpp/embedding_session.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/MNNEmbedding.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/Session.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/provider/AistProvider.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/service/AistService.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/utils/ServiceUtils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/cpp/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/cpp/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/cpp/embedding_mnn_jni.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/cpp/embedding_mnn_jni.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/cpp/llm_mnn_jni.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/cpp/llm_mnn_jni.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/cpp/llm_session.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/cpp/llm_session.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/cpp/llm_session.h" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/cpp/llm_session.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/ChatSession.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/ChatSession.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/EmbeddingSession.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/EmbeddingSession.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/MNN.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/engine/MNNLlm.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/service/LLMService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/service/LLMService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/service/WebServerService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/service/WebServerService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/ui/screens/main/MainViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/ui/screens/main/MainViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/webserver/MNNHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/io/kindbrave/mnnserver/webserver/MNNHandler.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/libs.versions.toml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=Default, isTemplate=false, identifier=serial=192.168.10.52:44983;connection=73f20311)]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$/app">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="MNN Server" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Object" />
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
+  <component name="GenerateSignedApkSettings">
+    <option name="KEY_STORE_PATH" value="$PROJECT_DIR$/../kindbrave_key.jks" />
+    <option name="KEY_ALIAS" value="key0" />
+    <option name="REMEMBER_PASSWORDS" value="true" />
+    <option name="BUILD_TARGET_KEY" value="apk" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="GitLabMergeRequestFiltersHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPENED&quot;,
+    &quot;assignee&quot;: {
+      &quot;type&quot;: &quot;org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue&quot;,
+      &quot;username&quot;: &quot;sunshine0523&quot;,
+      &quot;fullname&quot;: &quot;KindBrave&quot;
+    }
+  }
+}</component>
+  <component name="GitLabMergeRequestsSettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;first&quot;: &quot;git@gitlab.com:sunshine0523/mnnserver.git&quot;,
+    &quot;second&quot;: &quot;885529bf-f310-4d61-912d-6d6427748b84&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2upbE2rmo9HEoIUqOfe98Yi7URP" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;ApkExportedModule&quot;: &quot;MNN_Server.app&quot;,
+    &quot;BundleExportedModule&quot;: &quot;MNN_Server.app&quot;,
+    &quot;ExportApk.ApkPathForMNN_Server.app&quot;: &quot;/run/media/kindbrave/Data/code/Android/AndroidStudioProjects/MNNServer/app&quot;,
+    &quot;ResourceManagerPrefKey.ResourceType&quot;: &quot;DRAWABLE&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/run/media/kindbrave/Data/code/Android/AndroidStudioProjects/MNNServer/app/src/main/cpp&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;Code Search&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;ExportApk.BuildVariants&quot;: [
+      &quot;release&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/src/main/cpp" />
+      <recent name="$PROJECT_DIR$/app/src/main/res/drawable" />
+      <recent name="$PROJECT_DIR$/app/src/main/res/values-night" />
+      <recent name="$PROJECT_DIR$/app/src/main/assets" />
+      <recent name="$PROJECT_DIR$/app/src/main/res" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/src/main/aidl/io/kindbrave/mnnserver/service" />
+    </key>
+    <key name="CopyKotlinDeclarationDialog.RECENTS_KEY">
+      <recent name="io.kindbrave.mnnserver.engine" />
+      <recent name="io.kindbrave.mnnserver.utils" />
+    </key>
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="io.kindbrave.mnnserver.repository.model" />
+      <recent name="io.kindbrave.mnnserver.ui.screens.main" />
+      <recent name="io.kindbrave.mnnserver.ui.main" />
+      <recent name="io.kindbrave.mnnserver.ui.screens.log" />
+      <recent name="io.kindbrave.mnnserver.ui.screens.modellist" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="io.kindbrave.llama.cpp.mnnserver.utils" />
+      <recent name="io.kindbrave.llama.cpp.mnnserver.api" />
+      <recent name="io.kindbrave.llama.cpp.mnnserver.chat" />
+      <recent name="io.kindbrave.llama.cpp.mnnserver.session" />
+      <recent name="io.kindbrave.llama.cpp.mnnserver.service" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="MNN_Server.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8bb8d66c-1b62-4119-86c9-c92be595cd77" name="Changes" comment="" />
+      <created>1742948347366</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1742948347366</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744280662088</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1744280662088</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744281000022</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1744281000022</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744281416580</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1744281416580</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744281518987</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1744281518987</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744281726231</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1744281726231</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Init Commit">
+      <option name="closed" value="true" />
+      <created>1744281906992</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1744281906992</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add Setting Screen">
+      <option name="closed" value="true" />
+      <created>1744550908483</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1744550908483</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Add Setting Screen">
+      <option name="closed" value="true" />
+      <created>1744550915787</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1744550915787</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Fix: Model Import">
+      <option name="closed" value="true" />
+      <created>1744553122606</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1744553122606</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Fix: Model Load">
+      <option name="closed" value="true" />
+      <created>1744593334052</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1744593334052</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Fix: ModelId use model dir name">
+      <option name="closed" value="true" />
+      <created>1744964621449</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1744964621449</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Optimize: Server use ktor">
+      <option name="closed" value="true" />
+      <created>1746413941426</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1746413941426</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Optimize: Update MNN version">
+      <option name="closed" value="true" />
+      <created>1746451491965</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1746451491965</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Add: Download Model">
+      <option name="closed" value="true" />
+      <created>1746839299324</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1746839299324</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Support delete download model">
+      <option name="closed" value="true" />
+      <created>1747134321343</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1747134321344</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/../../../c/MNN" />
+    </ignored-roots>
+    <MESSAGE value="Init Commit" />
+    <MESSAGE value="Add Setting Screen" />
+    <MESSAGE value="Fix: Model Import" />
+    <MESSAGE value="Fix: Model Load" />
+    <MESSAGE value="Fix: ModelId use model dir name" />
+    <MESSAGE value="Optimize: Server use ktor" />
+    <MESSAGE value="Optimize: Update MNN version" />
+    <MESSAGE value="Add: Download Model" />
+    <MESSAGE value="Support delete download model" />
+    <option name="LAST_COMMIT_MESSAGE" value="Support delete download model" />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="io.kindbrave.llama.cpp.mnnserver">
+          <value>
+            <CheckInfo lastCheckTimestamp="1742951188562" />
+          </value>
+        </entry>
+        <entry key="io.kindbrave.llama.cpp.mnnserver.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1742951188562" />
+          </value>
+        </entry>
+        <entry key="io.kindbrave.mnnserver">
+          <value>
+            <CheckInfo lastCheckTimestamp="1747181855006" />
+          </value>
+        </entry>
+        <entry key="io.kindbrave.mnnserver.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1747181855006" />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

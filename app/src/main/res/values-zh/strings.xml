@@ -49,4 +49,8 @@
     <string name="embedding">向量模型</string>
     <string name="export_web_port">暴露服务端口</string>
     <string name="export_web_port_description">启用后，服务将暴露到外网</string>
+    <string name="ignore_battery_optimization_title">忽略电池优化</string>
+    <string name="ignore_battery_optimization_text">为了保证稳定的后台运行，请忽略电池优化，否则程序在后台运行时无法提供稳定服务。某些定制系统即使同意后也需要到应用设置-电池中勾选始终允许后台运行选项</string>
+    <string name="confirm">确认</string>
+    <string name="server_running_notification">服务运行中，端口: %1$s</string>
 </resources> 

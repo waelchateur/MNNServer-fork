@@ -49,4 +49,8 @@
     <string name="embedding">Embedding</string>
     <string name="export_web_port">Export Web Port</string>
     <string name="export_web_port_description">After enabling, the service will be exposed to the internet</string>
+    <string name="ignore_battery_optimization_title">Ignore Battery Optimization</string>
+    <string name="ignore_battery_optimization_text">To ensure stable background operation, please ignore battery optimization. Otherwise, the program may not provide stable services when running in the background. On some customized systems, even after you agree, you may still need to go to App Settings - Battery and select the "Always allow background running" option.</string>
+    <string name="confirm">Done</string>
+    <string name="server_running_notification">Server is Running. Port: %1$s</string>
 </resources>

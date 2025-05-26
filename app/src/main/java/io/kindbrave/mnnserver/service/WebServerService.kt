@@ -84,11 +84,15 @@ class WebServerService : Service() {
                     server.port = port
                     server.start()
                     _serverStatus.value = ServerStatus.Running
-                    startForeground(NOTIFICATION_ID, createNotification("服务运行中，端口: $port"))
+                    startForeground(NOTIFICATION_ID, createNotification(
+                        getString(
+                            R.string.server_running_notification,
+                            port.toString()
+                        )))
                 }
             }
         }.onFailure { e ->
-            _serverStatus.value = ServerStatus.Error("启动服务失败: ${e.message}")
+            _serverStatus.value = ServerStatus.Error("Error: ${e.message}")
             XLog.tag(tag).e("startServer=>error", e)
         }
     }

@@ -63,7 +63,6 @@ class MNNHandler @Inject constructor(
         return response
     }
 
-    @LogBefore("")
     fun completions(requestJson: String, writer: Writer) {
         val jsonBody = JSONObject(requestJson)
 
@@ -132,7 +131,6 @@ class MNNHandler @Inject constructor(
         }
     }
 
-    @LogBefore("")
     fun embeddings(requestJson: String): JSONObject {
         val jsonBody = JSONObject(requestJson)
 

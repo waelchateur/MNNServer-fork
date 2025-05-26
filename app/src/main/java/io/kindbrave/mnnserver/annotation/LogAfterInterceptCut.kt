@@ -15,10 +15,10 @@ class LogAfterInterceptCut : BasePointCut<LogAfter> {
         val args = joinPoint.args?.joinToString(", ") { it.toString() }
         try {
             val result = joinPoint.proceed()
-            XLog.tag(tag).d("$methodName:${anno.message} args:$args result:$result")
+            XLog.tag(tag).d("$methodName:${anno.message} after args:$args result:$result")
             return result
         } catch (e: Exception) {
-            XLog.tag(tag).e("$methodName:${anno.message} args:$args exception: ${e.message}")
+            XLog.tag(tag).e("$methodName:${anno.message} after args:$args exception: ${e.message}")
             throw e
         }
     }

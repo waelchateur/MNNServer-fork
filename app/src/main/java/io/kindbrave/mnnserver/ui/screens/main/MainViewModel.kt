@@ -9,6 +9,7 @@ import android.content.ServiceConnection
 import android.os.Environment
 import android.os.IBinder
 import android.os.StatFs
+import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
+import com.elvishew.xlog.XLog
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -57,7 +60,6 @@ class MainViewModel @Inject constructor(
             val binder = service as WebServerService.LocalBinder
             webServerService = binder.getService()
 
-            // 监听服务状态变化
             viewModelScope.launch {
                 webServerService?.serverStatus?.collect { status ->
                     _serverStatus.value = status
@@ -95,6 +97,23 @@ class MainViewModel @Inject constructor(
 
     private fun unbindService() {
         context.unbindService(serviceConnection)
+    }
+
+    fun isBatteryOptimizationDisabled(): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+   fun requestIgnoreBatteryOptimizations() {
+       runCatching {
+           val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+               data = "package:${context.packageName}".toUri()
+               flags = Intent.FLAG_ACTIVITY_NEW_TASK
+           }
+           context.startActivity(intent)
+       }.onFailure {
+           XLog.tag(tag).e("requestIgnoreBatteryOptimizations:onFailure:${it.message}")
+       }
     }
 
     fun startServer() {
