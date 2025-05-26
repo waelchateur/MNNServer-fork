@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -77,23 +78,21 @@ class WebServerService : Service() {
 
     @LogAfter("")
     private fun startServer() {
-        runCatching {
-            scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
+            runCatching {
                 val port = settingsRepository.getServerPort()
-                launch(Dispatchers.Default) {
-                    server.port = port
-                    server.start()
-                    _serverStatus.value = ServerStatus.Running
-                    startForeground(NOTIFICATION_ID, createNotification(
-                        getString(
-                            R.string.server_running_notification,
-                            port.toString()
-                        )))
-                }
+                server.port = port
+                server.start()
+                _serverStatus.value = ServerStatus.Running
+                startForeground(NOTIFICATION_ID, createNotification(
+                    getString(
+                        R.string.server_running_notification,
+                        port.toString()
+                    )))
+            }.onFailure { e ->
+                _serverStatus.value = ServerStatus.Error("Error: ${e.message}")
+                XLog.tag(tag).e("startServer=>error ${e.message}")
             }
-        }.onFailure { e ->
-            _serverStatus.value = ServerStatus.Error("Error: ${e.message}")
-            XLog.tag(tag).e("startServer=>error", e)
         }
     }
     

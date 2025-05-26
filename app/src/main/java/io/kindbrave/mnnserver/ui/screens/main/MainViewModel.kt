@@ -38,6 +38,8 @@ class MainViewModel @Inject constructor(
     private val tag = MainViewModel::class.java.simpleName
     private val settingsRepository = SettingsRepository(context)
 
+    private val intent = Intent(context, WebServerService::class.java)
+
     private val _serverStatus =
         MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
     val serverStatus: StateFlow<WebServerService.ServerStatus> = _serverStatus.asStateFlow()
@@ -87,7 +89,6 @@ class MainViewModel @Inject constructor(
     }
 
     private fun bindService() {
-        val intent = Intent(context, WebServerService::class.java)
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
@@ -115,7 +116,6 @@ class MainViewModel @Inject constructor(
     fun startServer() {
         viewModelScope.launch {
             _serverPort.emit(settingsRepository.getServerPort())
-            val intent = Intent(context, WebServerService::class.java)
             context.startService(intent)
             _serverStatus.emit(WebServerService.ServerStatus.Running)
         }
@@ -123,7 +123,7 @@ class MainViewModel @Inject constructor(
 
     fun stopServer() {
         viewModelScope.launch {
-            val intent = Intent(context, WebServerService::class.java)
+            webServerService?.stopServer()
             context.stopService(intent)
             _serverStatus.emit(WebServerService.ServerStatus.Stopped)
         }

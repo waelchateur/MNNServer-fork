@@ -18,6 +18,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
@@ -29,59 +30,55 @@ class KtorServer @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) {
     private val tag = KtorServer::class.simpleName
+    val serverScope = CoroutineScope(Dispatchers.IO)
     var port = 8080
 
-    private val server by lazy {
-        val exportWebPort = runBlocking {
-            settingsRepository.getExportWebPort()
-        }
-        embeddedServer(Netty, port, host = if (exportWebPort) "0.0.0.0" else "localhost") {
-            install(CallLogging)
+    private var serverJob: kotlinx.coroutines.Job? = null
 
-            routing {
-                get("/") {
-                    call.respondText("MNN Server is running")
-                }
-                get("/v1/models") {
-                    call.respondText(mnnHandler.getModels().toString())
-                }
-                post("/v1/chat/completions") {
-                    call.response.cacheControl(CacheControl.NoCache(null))
-                    runCatching {
-                        call.respondTextWriter(contentType = ContentType.Text.EventStream) {
-                            runCatching {
-                                mnnHandler.completions(call.receiveText(), this)
-                            }.onFailure { e ->
-                                XLog.tag(tag).e("completions:onFailure:$e")
-                                call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
+    suspend fun start() {
+        if (serverJob?.isActive == true) return
+
+        val exportWebPort = settingsRepository.getExportWebPort()
+
+        serverJob = serverScope.launch {
+            embeddedServer(Netty, port, host = if (exportWebPort) "0.0.0.0" else "localhost") {
+                install(CallLogging)
+
+                routing {
+                    get("/") {
+                        call.respondText("MNN Server is running")
+                    }
+                    get("/v1/models") {
+                        call.respondText(mnnHandler.getModels().toString())
+                    }
+                    post("/v1/chat/completions") {
+                        call.response.cacheControl(CacheControl.NoCache(null))
+                        runCatching {
+                            call.respondTextWriter(contentType = ContentType.Text.EventStream) {
+                                runCatching {
+                                    mnnHandler.completions(call.receiveText(), this)
+                                }.onFailure { e ->
+                                    XLog.tag(tag).e("completions:onFailure:$e")
+                                    call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
+                                }
                             }
+                        }.onFailure { e ->
+                            call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
                         }
-                    }.onFailure { e ->
-                        call.response.status(HttpStatusCode(500, e.message ?: "Unknown error"))
+                    }
+                    post("/v1/embeddings") {
+                        runCatching {
+                            call.respondText(mnnHandler.embeddings(call.receiveText()).toString())
+                        }.onFailure {
+                            call.response.status(HttpStatusCode(500, it.message ?: "Unknown error"))
+                        }
                     }
                 }
-                post("/v1/embeddings") {
-                    runCatching {
-                        call.respondText(mnnHandler.embeddings(call.receiveText()).toString())
-                    }.onFailure {
-                        call.response.status(HttpStatusCode(500, it.message ?: "Unknown error"))
-                    }
-                }
-            }
-        }
-    }
-
-    fun start() {
-        CoroutineScope(Dispatchers.IO).launch {
-            runCatching {
-                server.start(true)
-            }.onFailure { e ->
-                XLog.tag(tag).e("start:onFailure:$e")
-            }
+            }.start(true)
         }
     }
 
     fun stop() {
-        server.stop(1000, 1000)
+        serverJob?.cancel()
     }
 }
