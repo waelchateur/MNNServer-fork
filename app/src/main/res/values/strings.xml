@@ -53,4 +53,6 @@
     <string name="ignore_battery_optimization_text">To ensure stable background operation, please ignore battery optimization. Otherwise, the program may not provide stable services when running in the background. On some customized systems, even after you agree, you may still need to go to App Settings - Battery and select the "Always allow background running" option.</string>
     <string name="confirm">Done</string>
     <string name="server_running_notification">Server is Running. Port: %1$s</string>
+    <string name="developer">Developer:@KindBrave</string>
+    <string name="about">About</string>
 </resources>

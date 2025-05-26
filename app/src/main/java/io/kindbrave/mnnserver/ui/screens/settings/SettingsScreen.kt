@@ -40,6 +40,7 @@ fun SettingsScreen(
     val serverPort by viewModel.serverPort.collectAsState()
     val exportWebPort by viewModel.exportWebPort.collectAsState()
     var showPortSettingsDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -107,6 +108,16 @@ fun SettingsScreen(
                 ) },
                 modifier = Modifier.clickable { navController.navigate("settings/logs") }
             )
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.about)) },
+                leadingContent = { Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(R.drawable.about),
+                    contentDescription = null
+                ) },
+                modifier = Modifier.clickable { showAboutDialog = true }
+            )
         }
         
         if (showPortSettingsDialog) {
@@ -118,6 +129,10 @@ fun SettingsScreen(
                     showPortSettingsDialog = false
                 }
             )
+        }
+
+        if (showAboutDialog) {
+            AboutDialog { showAboutDialog = false }
         }
     }
 } 
