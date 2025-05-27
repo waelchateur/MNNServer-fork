@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.android.aop)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -15,8 +16,8 @@ android {
         applicationId = "io.kindbrave.mnnserver"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 2
+        versionName = "0.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -75,9 +76,13 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.call.logging)
-    implementation(libs.google.gson)
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.pages)
 
+    implementation(libs.google.gson)
     implementation(libs.retrofit2)
     implementation(libs.retrofit2.converter.gson)
     implementation(libs.okhttp3)

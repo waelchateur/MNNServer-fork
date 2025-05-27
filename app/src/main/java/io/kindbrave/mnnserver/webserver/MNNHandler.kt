@@ -6,6 +6,8 @@ import io.kindbrave.mnnserver.annotation.LogAfter
 import io.kindbrave.mnnserver.annotation.LogBefore
 import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
+import io.kindbrave.mnnserver.webserver.response.Model
+import io.kindbrave.mnnserver.webserver.response.ModelsResponse
 import kotlinx.io.IOException
 import org.json.JSONArray
 import org.json.JSONObject
@@ -21,46 +23,18 @@ class MNNHandler @Inject constructor(
 ) {
     private val tag = MNNHandler::class.java.simpleName
 
-    fun getModels(): JSONObject {
-        val response = JSONObject()
-        val modelsArray = JSONArray()
-
+    fun getModels(): List<Model> {
+        val modelList = mutableListOf<Model>()
         val sessions = llmService.getAllSessions()
+
         sessions.forEach { session ->
-            val modelJson = JSONObject()
-            modelJson.put("id", session.modelId)
-            modelJson.put("object", "model")
-            modelJson.put("created", System.currentTimeMillis() / 1000)
-            modelJson.put("owned_by", "organization-owner")
-
-            val permissionJson = JSONObject()
-            permissionJson.put("id", "modelperm-${UUID.randomUUID()}")
-            permissionJson.put("object", "model_permission")
-            permissionJson.put("created", System.currentTimeMillis() / 1000)
-            permissionJson.put("allow_create_engine", false)
-            permissionJson.put("allow_sampling", true)
-            permissionJson.put("allow_logprobs", true)
-            permissionJson.put("allow_search_indices", false)
-            permissionJson.put("allow_view", true)
-            permissionJson.put("allow_fine_tuning", false)
-            permissionJson.put("organization", "*")
-            permissionJson.put("group", null)
-            permissionJson.put("is_blocking", false)
-
-            val permissionsArray = JSONArray()
-            permissionsArray.put(permissionJson)
-
-            modelJson.put("permission", permissionsArray)
-            modelJson.put("root", session.modelId)
-            modelJson.put("parent", null)
-
-            modelsArray.put(modelJson)
+            modelList.add(Model(
+                id = session.modelId,
+                created = System.currentTimeMillis() / 1000,
+            ))
         }
 
-        response.put("object", "list")
-        response.put("data", modelsArray)
-
-        return response
+        return modelList
     }
 
     fun completions(requestJson: String, writer: Writer) {
