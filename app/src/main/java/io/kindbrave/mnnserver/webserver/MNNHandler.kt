@@ -95,7 +95,7 @@ class MNNHandler @Inject constructor(
                             false
                         }
                     } catch (e: IOException) {
-                        Log.e(tag, e.toString())
+                        XLog.tag(tag).e("completions:onFailure:$e")
                         true
                     }
                 }

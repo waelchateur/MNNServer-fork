@@ -232,6 +232,10 @@ class ModelListViewModel @Inject constructor(
         }
     }
 
+    fun getModelPath(modelId: String): String {
+        return mnnModelRepository.getDownloadPath(modelId)
+    }
+
     override fun onDownloadStart(modelId: String) {
         viewModelScope.launch {
             downloadStateMap[modelId]?.emit(ModelDownloadState.Start)

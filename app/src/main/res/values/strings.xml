@@ -37,8 +37,6 @@
     <string name="invalid_model_name">The model name is not valid. Please avoid using special characters</string>
     <string name="loading_model">Loading model %1$s</string>
     <string name="unloading_model">Unloading model %1$s</string>
-    <string name="thinking_mode">Deep Thinking</string>
-    <string name="no_thinking_mode">No Deep Thinking</string>
     <string name="download_models">Download Models</string>
     <string name="loading_model_list">Loading Model List</string>
     <string name="loading_model_no_name">Loading Model</string>
@@ -55,4 +53,11 @@
     <string name="server_running_notification">Server is Running. Port: %1$s</string>
     <string name="developer">Developer:@KindBrave</string>
     <string name="about">About</string>
+    <string name="model_config">Model Config</string>
+    <string name="common_settings">Common Settings</string>
+    <string name="advanced_settings">Advanced Settings</string>
+    <string name="thinking_mode">Thinking Mode</string>
+    <string name="no_thinking_mode">No Thinking Mode</string>
+    <string name="mmap_option">mmap</string>
+    <string name="backend_type">backend</string>
 </resources>

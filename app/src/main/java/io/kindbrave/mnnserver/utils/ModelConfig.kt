@@ -33,6 +33,7 @@ data class ModelConfig(
     @SerializedName("max_new_tokens")var maxNewTokens:Int?,
     @SerializedName("assistant_prompt_template")var assistantPromptTemplate:String?,
     @SerializedName("thinking_mode")var thinkingMode: Boolean?,
+    @SerializedName("mmap")var mmap: Boolean?,
     ) {
     fun deepCopy(): ModelConfig {
         return ModelConfig(
@@ -56,22 +57,9 @@ data class ModelConfig(
             nGramFactor = this.nGramFactor,
             maxNewTokens = this.maxNewTokens,
             assistantPromptTemplate = this.assistantPromptTemplate,
-            thinkingMode = this.thinkingMode
+            thinkingMode = this.thinkingMode,
+            mmap = this.mmap
         )
-    }
-
-    fun samplerEquals(loadedConfig: ModelConfig): Boolean {
-        return this.samplerType == loadedConfig.samplerType &&
-                this.mixedSamplers == loadedConfig.mixedSamplers &&
-                this.temperature == loadedConfig.temperature &&
-                this.topP == loadedConfig.topP &&
-                this.topK == loadedConfig.topK &&
-                this.minP == loadedConfig.minP &&
-                this.tfsZ == loadedConfig.tfsZ &&
-                this.typical == loadedConfig.typical &&
-                this.penalty == loadedConfig.penalty &&
-                this.nGram == loadedConfig.nGram &&
-                this.nGramFactor == loadedConfig.nGramFactor
     }
 
     companion object {

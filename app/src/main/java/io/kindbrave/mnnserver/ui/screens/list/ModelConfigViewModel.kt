@@ -1,17 +1,22 @@
-package io.kindbrave.mnnserver.ui.screens.modellist
+package io.kindbrave.mnnserver.ui.screens.list
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelConfig
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-class ModelConfigViewModel(private val application: Application): AndroidViewModel(application) {
+@HiltViewModel
+class ModelConfigViewModel @Inject constructor(): ViewModel() {
 
     private val _modelConfig: MutableStateFlow<ModelConfig> = MutableStateFlow(DEFAULT_CONFIG)
-    val modelConfig: StateFlow<ModelConfig> = _modelConfig
     private var modelId = ""
+
+    val thinkMode = mutableStateOf(false)
+    val mmapEnabled = mutableStateOf(false)
+    val backend = mutableStateOf("cpu")
 
     private fun getModelSettingsFile(modelId: String): String {
         this.modelId = modelId
@@ -24,10 +29,30 @@ class ModelConfigViewModel(private val application: Application): AndroidViewMod
         ModelConfig.loadConfig(originalModelSettingsFile, modelSettingsFile)?.let {
             _modelConfig.value = it
         }
+        updateConfig()
+    }
+
+    private fun updateConfig() {
+        thinkMode.value = _modelConfig.value.thinkingMode == true
+        mmapEnabled.value = _modelConfig.value.mmap == true
+        backend.value = _modelConfig.value.backendType ?: "cpu"
     }
 
     fun setThinkingMode(thinking: Boolean) {
+        thinkMode.value = thinking
         _modelConfig.value = _modelConfig.value.copy(thinkingMode = thinking)
+        saveModelConfig()
+    }
+
+    fun setMMap(mmap: Boolean) {
+        mmapEnabled.value = mmap
+        _modelConfig.value = _modelConfig.value.copy(mmap = mmap)
+        saveModelConfig()
+    }
+
+    fun setBackend(backend: String) {
+        this.backend.value = backend
+        _modelConfig.value = _modelConfig.value.copy(backendType = backend)
         saveModelConfig()
     }
 
@@ -59,6 +84,7 @@ class ModelConfigViewModel(private val application: Application): AndroidViewMod
             maxNewTokens = 2048,
             assistantPromptTemplate = null,
             thinkingMode = true,
+            mmap = false
         )
     }
 }

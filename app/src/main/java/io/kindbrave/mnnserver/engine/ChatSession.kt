@@ -5,6 +5,7 @@ package io.kindbrave.mnnserver.engine
 
 import android.util.Log
 import com.alibaba.mls.api.ApplicationProvider
+import com.elvishew.xlog.XLog
 import com.google.gson.Gson
 import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.kindbrave.mnnserver.engine.MNNLlm.AudioDataListener
@@ -40,19 +41,9 @@ class ChatSession(
     private var releaseRequeted = false
 
     suspend fun load() {
-        Log.d(tag, "Loading model: $modelId")
         modelLoading = true
 
         var rootCacheDir: String? = ""
-        if (ModelPreferences.useMmap(ApplicationProvider.get(), modelId)) {
-            rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))
-            File(rootCacheDir).mkdirs()
-        }
-        val useOpencl = ModelPreferences.getBoolean(
-            ApplicationProvider.get(),
-            modelId, ModelPreferences.KEY_BACKEND, false
-        )
-        val backend = if (useOpencl) "opencl" else "cpu"
         val configMap = HashMap<String, Any>().apply {
             put("is_diffusion", isDiffusion)
             put("is_r1", ModelUtils.isR1Model(modelId))
@@ -66,9 +57,11 @@ class ChatSession(
                 "<|im_start|>assistant\n<think>\n</think>%s<|im_end|>\n"
             }
             this.assistantPromptTemplate = extraAssistantPrompt
-            this.backendType = backend
         }
-        Log.d(tag, "MNN_DEBUG load initNative")
+        if (extraConfig?.mmap == true) {
+            rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))
+            File(rootCacheDir).mkdirs()
+        }
         nativePtr = MNNLlm.initNative(
             configPath,
             if (extraConfig != null) {
@@ -78,8 +71,8 @@ class ChatSession(
             },
             Gson().toJson(configMap)
         )
-        Log.d(tag, "MNN_DEBUG load initNative end")
         modelLoading = false
+        XLog.tag(tag).d("MNN_DEBUG $debugInfo")
         if (releaseRequeted) {
             release()
         }
@@ -87,11 +80,6 @@ class ChatSession(
 
     val debugInfo: String
         get() = MNNLlm.getDebugInfoNative(nativePtr) + "\n"
-
-    fun generateNewSession(): String {
-        this.sessionId = System.currentTimeMillis().toString()
-        return this.sessionId
-    }
 
     fun generate(
         history: List<Pair<String, String>>,

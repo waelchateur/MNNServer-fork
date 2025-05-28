@@ -5,37 +5,33 @@ import com.alibaba.mls.api.ModelItem
 import com.alibaba.mls.api.download.ModelDownloadManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnnserver.annotation.LogAfter
-import io.kindbrave.mnnserver.annotation.LogBefore
 import io.kindbrave.mnnserver.service.LLMService
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.mutableSetOf
 
 @Singleton
 class MNNModelRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val llmService: LLMService
 ){
-    private val tag = MNNModelRepository::class.java.simpleName
     private val modelDownloadManager = ModelDownloadManager.getInstance(context)
 
     @LogAfter("")
     suspend fun loadModel(model: ModelItem) {
         if (llmService.isModelLoaded(model.modelId.toString())) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
-        val modelPath = modelDownloadManager.getDownloadPath(model.modelId!!)
+        val modelPath = getDownloadPath(model.modelId!!)
         if (model.getTags().contains("embedding")) {
             llmService.createEmbeddingSession(
                 modelId = model.modelId!!,
-                modelDir = modelPath.path,
+                modelDir = modelPath,
                 sessionId = model.modelId!!
             )
         } else {
             llmService.createChatSession(
                 modelId = model.modelId!!,
-                modelDir = modelPath.path,
+                modelDir = modelPath,
                 sessionId = model.modelId!!
             )
         }
@@ -54,5 +50,9 @@ class MNNModelRepository @Inject constructor(
 
     fun isModelLoaded(model: ModelItem): Boolean {
         return llmService.isModelLoaded(model.modelId.toString())
+    }
+
+    fun getDownloadPath(modelId: String): String {
+        return modelDownloadManager.getDownloadPath(modelId).absolutePath
     }
 }

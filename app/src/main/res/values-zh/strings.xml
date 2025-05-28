@@ -37,8 +37,6 @@
     <string name="invalid_model_name">模型名称不合法，请避免使用特殊字符</string>
     <string name="loading_model">正在加载模型 %1$s</string>
     <string name="unloading_model">正在卸载模型 %1$s</string>
-    <string name="thinking_mode">深度思考</string>
-    <string name="no_thinking_mode">快速回答</string>
     <string name="download_models">下载模型</string>
     <string name="loading_model_list">加载模型列表</string>
     <string name="loading_model_no_name">加载模型</string>
@@ -55,4 +53,11 @@
     <string name="server_running_notification">服务运行中，端口: %1$s</string>
     <string name="developer">开发者:@KindBrave</string>
     <string name="about">关于</string>
+    <string name="model_config">模型配置</string>
+    <string name="common_settings">常用设置</string>
+    <string name="advanced_settings">高级设置</string>
+    <string name="thinking_mode">思考模式</string>
+    <string name="no_thinking_mode">非思考模式</string>
+    <string name="mmap_option">mmap</string>
+    <string name="backend_type">backend</string>
 </resources> 

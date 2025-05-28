@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,12 +51,12 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
     val modelName = remember(model) { model.modelName ?: "" }
     val drawableId = remember(model) { ModelUtils.getDrawableId(modelName) }
 
+    var showConfigDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { }
-
-
 
     Row(
         modifier = Modifier
@@ -64,35 +65,13 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(if (drawableId == 0) R.drawable.unknown else drawableId),
-            contentDescription = stringResource(R.string.download_models),
-            modifier = Modifier.size(40.dp),
-            tint = Color.Unspecified
-        )
-
+        ModelIcon(drawableId)
         Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(vertical = 4.dp)
         ) {
-            Text(
-                text = modelName,
-                fontSize = 16.sp,
-                maxLines = 1
-            )
-
-            if (tags.isNotEmpty()) {
-                FlowRow(
-                    modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    tags.forEach { tag ->
-                        TagChip(tag)
-                    }
-                }
-            }
-            DownloadProgress(downloadState)
+            ModelName(modelName, tags, downloadState)
         }
 
         when (downloadState) {
@@ -144,7 +123,7 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
                 } else {
                     IconButton(
                         onClick = { viewModel.loadDownloadModel(model) },
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        modifier = Modifier.align(Alignment.CenterVertically).size(20.dp),
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.start),
@@ -153,8 +132,18 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
                         )
                     }
                     IconButton(
+                        onClick = { showConfigDialog = true },
+                        modifier = Modifier.align(Alignment.CenterVertically).size(20.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.config),
+                            contentDescription = stringResource(R.string.model_config),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
                         onClick = { viewModel.deleteDownloadModel(model) },
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        modifier = Modifier.align(Alignment.CenterVertically).size(20.dp)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.delete),
@@ -167,10 +156,53 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
             else -> Unit
         }
     }
+
+    if (showConfigDialog) {
+        ModelConfigBottomSheet(
+            model.modelId!!,
+            viewModel.getModelPath(model.modelId!!),
+            onDismissRequest = {
+                showConfigDialog = false
+            }
+        )
+    }
 }
 
 @Composable
-fun DownloadProgress(
+private fun ModelIcon(drawableId: Int) {
+    Icon(
+        painter = painterResource(if (drawableId == 0) R.drawable.unknown else drawableId),
+        contentDescription = stringResource(R.string.download_models),
+        modifier = Modifier.size(40.dp),
+        tint = Color.Unspecified
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ModelName(modelName: String, tags: List<String>, downloadState: ModelDownloadState) {
+    Text(
+        text = modelName,
+        fontSize = 16.sp,
+        maxLines = 1
+    )
+
+    if (tags.isNotEmpty()) {
+        FlowRow(
+            modifier = Modifier.padding(top = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tags.forEach { tag ->
+                TagChip(tag)
+            }
+        }
+    }
+    DownloadProgress(downloadState)
+
+}
+
+@Composable
+private fun DownloadProgress(
     downloadState: ModelDownloadState
 ) {
     var lastProgress by remember { mutableFloatStateOf(0.0f) }
