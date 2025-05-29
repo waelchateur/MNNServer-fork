@@ -86,7 +86,6 @@ class ChatSession(
         progressListener: GenerateProgressListener
     ): HashMap<String, Any> {
         synchronized(this) {
-            Log.d(tag, "MNN_DEBUG submit$history")
             generating = true
             val result = MNNLlm.submitNative(nativePtr, history, progressListener)
             generating = false

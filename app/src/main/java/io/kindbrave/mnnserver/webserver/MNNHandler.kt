@@ -1,13 +1,9 @@
 package io.kindbrave.mnnserver.webserver
 
-import android.util.Log
 import com.elvishew.xlog.XLog
-import io.kindbrave.mnnserver.annotation.LogAfter
-import io.kindbrave.mnnserver.annotation.LogBefore
 import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.webserver.response.Model
-import io.kindbrave.mnnserver.webserver.response.ModelsResponse
 import kotlinx.io.IOException
 import org.json.JSONArray
 import org.json.JSONObject
@@ -57,41 +53,13 @@ class MNNHandler @Inject constructor(
 
         runCatching {
             val history = buildChatHistory(messages)
-            chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
+            val metrics = chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
                 override fun onProgress(progress: String?): Boolean {
                     return try {
                         if (progress == null) {
-                            val lastChunk = JSONObject()
-                                .put("id", "chatcmpl-$messageId")
-                                .put("object", "chat.completion.chunk")
-                                .put("created", createdTime)
-                                .put("model", modelId)
-                                .put("choices", JSONArray().put(
-                                    JSONObject()
-                                        .put("index", 0)
-                                        .put("delta", JSONObject())
-                                        .put("finish_reason", "stop")
-                                ))
-
-                            writer.write("data: $lastChunk\n\n")
-                            writer.write("data: [DONE]\n\n")
-                            writer.flush()
                             true
                         } else {
-                            val chunk = JSONObject()
-                                .put("id", "chatcmpl-$messageId")
-                                .put("object", "chat.completion.chunk")
-                                .put("created", createdTime)
-                                .put("model", modelId)
-                                .put("choices", JSONArray().put(
-                                    JSONObject()
-                                        .put("index", 0)
-                                        .put("delta", JSONObject().put("content", progress))
-                                        .put("finish_reason", JSONObject.NULL)
-                                ))
-
-                            writer.write("data: $chunk\n\n")
-                            writer.flush()
+                            writer.writeChunk(messageId, createdTime, modelId, progress)
                             false
                         }
                     } catch (e: IOException) {
@@ -100,6 +68,7 @@ class MNNHandler @Inject constructor(
                     }
                 }
             })
+            writer.writeLastChunk(messageId, createdTime, modelId, metrics)
         }.onFailure { e ->
             XLog.tag(tag).e("completions:onFailure:$e")
         }
@@ -150,4 +119,50 @@ class MNNHandler @Inject constructor(
 
         return history
     }
+}
+
+fun Writer.writeChunk(messageId: String, createdTime: Long, modelId: String, progress: String) {
+    val chunk = JSONObject()
+        .put("id", "chatcmpl-$messageId")
+        .put("object", "chat.completion.chunk")
+        .put("created", createdTime)
+        .put("model", modelId)
+        .put("choices", JSONArray().put(
+            JSONObject()
+                .put("index", 0)
+                .put("delta", JSONObject().put("content", progress))
+                .put("finish_reason", JSONObject.NULL)
+        ))
+
+    write("data: $chunk\n\n")
+    flush()
+}
+
+fun Writer.writeLastChunk(
+    messageId: String,
+    createdTime: Long,
+    modelId: String,
+    metrics: HashMap<String, Any>
+) {
+    val promptLen = if (metrics.containsKey("prompt_len")) metrics["prompt_len"] as Long else 0L
+    val decodeLen = if (metrics.containsKey("decode_len")) metrics["decode_len"] as Long else 0L
+    val lastChunk = JSONObject()
+        .put("id", "chatcmpl-$messageId")
+        .put("object", "chat.completion.chunk")
+        .put("created", createdTime)
+        .put("model", modelId)
+        .put("choices", JSONArray().put(
+            JSONObject()
+                .put("index", 0)
+                .put("delta", JSONObject())
+                .put("finish_reason", "stop")
+        ))
+        .put("usage", JSONObject()
+           .put("prompt_tokens", promptLen)
+           .put("completion_tokens", decodeLen)
+           .put("total_tokens", promptLen + decodeLen))
+
+    write("data: $lastChunk\n\n")
+    write("data: [DONE]\n\n")
+    flush()
 }
