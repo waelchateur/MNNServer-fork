@@ -1,6 +1,7 @@
 package io.kindbrave.mnnserver.webserver
 
 import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.annotation.LogAfter
 import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.webserver.response.Model
@@ -33,12 +34,10 @@ class MNNHandler @Inject constructor(
         return modelList
     }
 
-    fun completions(requestJson: String, writer: Writer) {
-        val jsonBody = JSONObject(requestJson)
-
+    @LogAfter("")
+    fun completions(jsonBody: JSONObject): JSONObject {
         val modelId = jsonBody.optString("model", "")
         val messages = jsonBody.optJSONArray("messages")
-
         if (modelId.isEmpty() || messages == null || messages.length() == 0) {
             throw InvalidParameterException("please give modelId or messages params")
         }
@@ -51,8 +50,65 @@ class MNNHandler @Inject constructor(
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
 
+        val history = buildChatHistory(messages)
+        val generateResponse = StringBuilder()
+        val metrics = chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
+            override fun onProgress(progress: String?): Boolean {
+                return try {
+                    if (progress == null) {
+                        true
+                    } else {
+                        generateResponse.append(progress)
+                        false
+                    }
+                } catch (e: IOException) {
+                    XLog.tag(tag).e("completions:onFailure:$e")
+                    true
+                }
+            }
+        })
+        val promptLen = if (metrics.containsKey("prompt_len")) metrics["prompt_len"] as Long else 0L
+        val decodeLen = if (metrics.containsKey("decode_len")) metrics["decode_len"] as Long else 0L
+        val response = JSONObject()
+            .put("id", "chatcmpl-$messageId")
+            .put("object", "chat.completion")
+            .put("created", createdTime)
+            .put("model", modelId)
+            .put("choices", JSONArray().put(
+                JSONObject()
+                    .put("index", 0)
+                    .put("message", JSONObject()
+                       .put("role", "assistant")
+                       .put("content", generateResponse.toString()))
+                    .put("finish_reason", "stop")
+            ))
+            .put("usage", JSONObject()
+                .put("prompt_tokens", promptLen)
+                .put("completion_tokens", decodeLen)
+                .put("total_tokens", promptLen + decodeLen))
+        return response
+    }
+
+    fun completionsStreaming(jsonBody: JSONObject, writer: Writer) {
+        val modelId = jsonBody.optString("model", "")
+        val messages = jsonBody.optJSONArray("messages")
+
+        if (modelId.isEmpty() || messages == null || messages.length() == 0) {
+            throw InvalidParameterException("please give modelId or messages params")
+        }
+
+        val chatSession = llmService.getChatSession(modelId)
+        if (chatSession == null) {
+            throw InvalidParameterException("chatSession is null")
+        }
+
+        val messageId = UUID.randomUUID().toString()
+        val createdTime = System.currentTimeMillis() / 1000
+
         runCatching {
             val history = buildChatHistory(messages)
+            // 首先发送空白内容防止回复过慢客户端断开连接
+            writer.writeChunk(messageId, createdTime, modelId, "")
             val metrics = chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
                 override fun onProgress(progress: String?): Boolean {
                     return try {
@@ -63,14 +119,14 @@ class MNNHandler @Inject constructor(
                             false
                         }
                     } catch (e: IOException) {
-                        XLog.tag(tag).e("completions:onFailure:$e")
+                        XLog.tag(tag).e("completions:onProgress onFailure:$e")
                         true
                     }
                 }
             })
             writer.writeLastChunk(messageId, createdTime, modelId, metrics)
         }.onFailure { e ->
-            XLog.tag(tag).e("completions:onFailure:$e")
+            XLog.tag(tag).e("completionsStreaming:onFailure:$e")
         }
     }
 
@@ -86,7 +142,7 @@ class MNNHandler @Inject constructor(
 
         val embeddingSession = llmService.getEmbeddingSession(modelId)
         if (embeddingSession == null) {
-            throw InvalidParameterException("this model can not embedding")
+            throw InvalidParameterException("embeddingSession is null")
         }
 
         runCatching {
