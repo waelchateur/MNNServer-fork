@@ -39,8 +39,6 @@ object MNNLlm {
 
     external fun updateAssistantPromptNative(llmPtr: Long, assistantPrompt: String)
 
-    external fun embedding(llmPtr: Long, text: String): FloatArray
-
     interface GenerateProgressListener {
         fun onProgress(progress: String?): Boolean
     }
