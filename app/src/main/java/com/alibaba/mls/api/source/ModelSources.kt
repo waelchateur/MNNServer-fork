@@ -3,11 +3,9 @@
 package com.alibaba.mls.api.source
 
 import com.alibaba.mls.api.ApplicationProvider
-import io.kindbrave.mnnserver.repository.SettingsRepository
-import kotlinx.coroutines.runBlocking
+import com.alibaba.mnnllm.android.mainsettings.MainSettings.getDownloadProvider
 
-class ModelSources() {
-    private val settingsRepository = SettingsRepository(ApplicationProvider.get())
+class ModelSources {
     enum class ModelSourceType {
         MODEL_SCOPE,
         HUGGING_FACE,
@@ -15,20 +13,9 @@ class ModelSources() {
         LOCAL
     }
 
-    fun getDownloadProvider(): ModelSources.ModelSourceType {
-        val result = runBlocking {
-            settingsRepository.getDownloadProvider()
-        }
-        return when (result) {
-            "HuggingFace" -> ModelSources.ModelSourceType.HUGGING_FACE
-            "ModelScope" -> ModelSources.ModelSourceType.MODEL_SCOPE
-            else -> ModelSources.ModelSourceType.MODELERS
-        }
-    }
-
     val remoteSourceType: ModelSourceType
         get() {
-            return getDownloadProvider()
+            return getDownloadProvider(ApplicationProvider.get()!!)
         }
 
     private object InstanceHolder {

@@ -1,7 +1,7 @@
 package io.kindbrave.mnnserver.repository.model
 
 import android.content.Context
-import com.alibaba.mls.api.HfApiClient
+import com.alibaba.mls.api.hf.HfApiClient
 import com.alibaba.mls.api.ModelItem
 import com.alibaba.mls.api.download.DownloadInfo
 import com.alibaba.mls.api.download.DownloadListener
@@ -158,7 +158,7 @@ class MNNModelDownloadRepository @Inject constructor(
     }
 
     @LogAfter("")
-    fun deleteModel(model: ModelItem) {
-        modelDownloadManager.removeDownload(model.modelId!!)
+    suspend fun deleteModel(model: ModelItem) {
+        modelDownloadManager.deleteModel(model.modelId!!)
     }
 }

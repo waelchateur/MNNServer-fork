@@ -53,6 +53,6 @@ class MNNModelRepository @Inject constructor(
     }
 
     fun getDownloadPath(modelId: String): String {
-        return modelDownloadManager.getDownloadPath(modelId).absolutePath
+        return modelDownloadManager.getDownloadedFile(modelId)?.absolutePath ?: ""
     }
 }

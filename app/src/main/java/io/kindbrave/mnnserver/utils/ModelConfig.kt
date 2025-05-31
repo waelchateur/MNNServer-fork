@@ -4,6 +4,8 @@
 package io.kindbrave.mnnserver.utils
 
 import android.util.Log
+import com.alibaba.mls.api.ApplicationProvider
+import com.alibaba.mnnllm.android.model.ModelUtils
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
@@ -119,74 +121,16 @@ data class ModelConfig(
             }
         }
 
-        fun saveConfigOld(filePath: String, config: ModelConfig): Boolean {
-            return try {
-                val file = File(filePath)
-                FileUtils.ensureParentDirectoriesExist(file)
-                val jsonObject = JsonObject()
+        fun getExtraConfigFile(modelId: String):String {
+            return getModelConfigDir(modelId) + "/custom_config.json"
+        }
 
-                if (config.llmModel != null) jsonObject.addProperty(
-                    "llm_model",
-                    config.llmModel
+        fun getModelConfigDir(modelId: String): String {
+            val rootCacheDir =
+                ApplicationProvider.get().filesDir.toString() + "/configs/" + ModelUtils.safeModelId(
+                    modelId
                 )
-                if (config.llmWeight != null) jsonObject.addProperty(
-                    "llm_weight",
-                    config.llmWeight
-                )
-                if (config.backendType != null) jsonObject.addProperty(
-                    "backend_type",
-                    config.backendType
-                )
-                if (config.maxNewTokens != null) jsonObject.addProperty("max_new_tokens", config.maxNewTokens)
-                if (config.threadNum != null) jsonObject.addProperty("threadNum", config.threadNum)
-                if (config.nGram != null) jsonObject.addProperty("n_gram", config.nGram)
-                if (config.precision!= null) jsonObject.addProperty(
-                    "precision",
-                    config.precision
-                )
-                if (config.memory!= null) jsonObject.addProperty("memory", config.memory)
-                if (config.systemPrompt!= null) jsonObject.addProperty(
-                    "system_prompt",
-                    config.systemPrompt
-                )
-                if (config.samplerType != null) jsonObject.addProperty(
-                    "sampler_type",
-                    config.samplerType
-                )
-                if (config.mixedSamplers != null && config.mixedSamplers!!.isNotEmpty()) jsonObject.add(
-                    "mixed_samplers",
-                    Gson().toJsonTree(config.mixedSamplers)
-                )
-                if (config.temperature != null) jsonObject.addProperty(
-                    "temperature",
-                    config.temperature
-                )
-                if (config.tfsZ != null) jsonObject.addProperty(
-                    "tfsZ",
-                    config.tfsZ
-                )
-                if (config.typical != null) jsonObject.addProperty(
-                    "typical",
-                    config.typical
-                )
-                if (config.penalty != null) jsonObject.addProperty(
-                    "penalty",
-                    config.penalty
-                )
-                if (config.nGramFactor != null) jsonObject.addProperty(
-                    "ngram_factor",
-                    config.nGramFactor
-                )
-                if (config.topP != null) jsonObject.addProperty("topP", config.topP)
-                if (config.topK != null) jsonObject.addProperty("topK", config.topK)
-                if (config.minP != null) jsonObject.addProperty("minP", config.minP)
-
-                file.writeText(Gson().toJson(jsonObject))
-                true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                false
-            }
+            return rootCacheDir
         }
     }
 }

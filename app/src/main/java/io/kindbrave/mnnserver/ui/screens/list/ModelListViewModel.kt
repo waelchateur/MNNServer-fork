@@ -236,6 +236,10 @@ class ModelListViewModel @Inject constructor(
         return mnnModelRepository.getDownloadPath(modelId)
     }
 
+    override fun onDownloadTotalSize(modelId: String, totalSize: Long) {
+        
+    }
+
     override fun onDownloadStart(modelId: String) {
         viewModelScope.launch {
             downloadStateMap[modelId]?.emit(ModelDownloadState.Start)
