@@ -31,6 +31,9 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         diffusion_session.cpp
         llm_session.cpp
         embedding_session.cpp
+        asr.cpp
+        tokenizer.cpp
+        asr_mnn_jni.cpp
 )
 #mnn
 set (MNN_ROOT "${CMAKE_SOURCE_DIR}/../../../../../../../c/MNN")
@@ -45,6 +48,9 @@ include_directories("${MNN_ROOT}/transformers/diffusion/engine/include/")
 include_directories("${CMAKE_SOURCE_DIR}/include")
 
 include_directories("${CMAKE_SOURCE_DIR}/third_party")
+
+# asr
+include_directories("${MNN_ROOT}/3rd_party")
 
 # Add library paths
 set(LIB_PATH "${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}")

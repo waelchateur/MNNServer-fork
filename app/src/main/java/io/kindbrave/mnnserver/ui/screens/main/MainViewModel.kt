@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.core.net.toUri
 import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.engine.AsrSession
+import io.kindbrave.mnnserver.engine.MNNAsr
 
 @HiltViewModel
 class MainViewModel @Inject constructor(

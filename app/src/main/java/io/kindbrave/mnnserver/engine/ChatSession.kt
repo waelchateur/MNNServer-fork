@@ -197,10 +197,6 @@ class ChatSession(
         MNNLlm.updateAssistantPromptNative(nativePtr, assistantPrompt)
     }
 
-    fun embedding(text: String): FloatArray {
-        return MNNLlm.embedding(nativePtr, text)
-    }
-
     protected fun finalize() {
         release()
     }

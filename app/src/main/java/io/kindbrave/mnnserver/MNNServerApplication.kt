@@ -6,6 +6,7 @@ import com.elvishew.xlog.LogConfiguration
 import com.elvishew.xlog.XLog
 import com.elvishew.xlog.flattener.DefaultFlattener
 import com.elvishew.xlog.flattener.PatternFlattener
+import com.elvishew.xlog.printer.AndroidPrinter
 import com.elvishew.xlog.printer.file.FilePrinter
 import com.elvishew.xlog.printer.file.backup.FileSizeBackupStrategy2
 import com.elvishew.xlog.printer.file.clean.FileLastModifiedCleanStrategy
@@ -31,6 +32,6 @@ class MNNServerApplication : Application() {
             .build()
         val config = LogConfiguration.Builder()
             .build()
-        XLog.init(config, filePrinter)
+        XLog.init(config, filePrinter, AndroidPrinter())
     }
 }
