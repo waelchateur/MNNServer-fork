@@ -5,6 +5,8 @@ package io.kindbrave.mnnserver.service
 
 import android.text.TextUtils
 import com.elvishew.xlog.XLog
+import io.kindbrave.mnnserver.annotation.LogAfter
+import io.kindbrave.mnnserver.engine.AsrSession
 import io.kindbrave.mnnserver.engine.ChatSession
 import io.kindbrave.mnnserver.engine.EmbeddingSession
 import io.kindbrave.mnnserver.engine.Session
@@ -21,9 +23,11 @@ import javax.inject.Singleton
 class LLMService @Inject constructor() {
     private val chatSessionMap = mutableMapOf<String, ChatSession>()
     private val embeddingSessionMap = mutableMapOf<String, EmbeddingSession>()
+    private val asrSessionMap = mutableMapOf<String, AsrSession>()
     private val _loadedModelsState: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val loadedModelsState: StateFlow<Set<String>> = _loadedModelsState
 
+    @LogAfter("")
     suspend fun createChatSession(
         modelId: String,
         modelDir: String,
@@ -47,6 +51,7 @@ class LLMService @Inject constructor() {
         return session
     }
 
+    @LogAfter("")
     suspend fun createEmbeddingSession(
         modelId: String,
         modelDir: String,
@@ -69,12 +74,39 @@ class LLMService @Inject constructor() {
         return session
     }
 
+    @LogAfter("")
+    suspend fun createAsrSession(
+        modelId: String,
+        modelDir: String,
+        sessionId: String
+    ): AsrSession {
+        var finalSessionId = sessionId
+        if (TextUtils.isEmpty(finalSessionId)) {
+            finalSessionId = System.currentTimeMillis().toString()
+        }
+
+        val session = AsrSession(
+            modelId = modelId,
+            sessionId = finalSessionId,
+            configPath = "$modelDir/config.json",
+        )
+        session.load()
+
+        asrSessionMap[modelId] = session
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { add(modelId) })
+        return session
+    }
+
     fun getChatSession(modelId: String): ChatSession? {
         return chatSessionMap[modelId]
     }
 
     fun getEmbeddingSession(modelId: String): EmbeddingSession? {
         return embeddingSessionMap[modelId]
+    }
+
+    fun getAsrSession(modelId: String): AsrSession? {
+        return asrSessionMap[modelId]
     }
 
     suspend fun removeChatSession(modelId: String) {
@@ -89,8 +121,14 @@ class LLMService @Inject constructor() {
         _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
     }
 
+    suspend fun removeAsrSession(modelId: String) {
+        asrSessionMap[modelId]?.release()
+        asrSessionMap.remove(modelId)
+        _loadedModelsState.emit(_loadedModelsState.value.toMutableSet().apply { remove(modelId) })
+    }
+
     fun getAllSessions(): List<Session> {
-        return chatSessionMap.values.toList() + embeddingSessionMap.values.toList()
+        return chatSessionMap.values.toList() + embeddingSessionMap.values.toList() + asrSessionMap.values.toList()
     }
 
     fun getAllChatSessions(): List<ChatSession> {
@@ -101,15 +139,21 @@ class LLMService @Inject constructor() {
         return embeddingSessionMap.values.toList()
     }
 
+    fun getAllAsrSessions(): List<AsrSession> {
+        return asrSessionMap.values.toList()
+    }
+
     suspend fun releaseAllSessions() {
         chatSessionMap.values.forEach { it.release() }
         chatSessionMap.clear()
         embeddingSessionMap.values.forEach { it.release() }
         embeddingSessionMap.clear()
+        asrSessionMap.values.forEach { it.release() }
+        asrSessionMap.clear()
         _loadedModelsState.emit(emptySet())
     }
 
     fun isModelLoaded(modelId: String): Boolean {
-        return chatSessionMap.containsKey(modelId) || embeddingSessionMap.containsKey(modelId)
+        return chatSessionMap.containsKey(modelId) || embeddingSessionMap.containsKey(modelId) || asrSessionMap.containsKey(modelId)
     }
 }

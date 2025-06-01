@@ -60,4 +60,6 @@
     <string name="no_thinking_mode">No Thinking Mode</string>
     <string name="mmap_option">mmap</string>
     <string name="backend_type">backend</string>
+    <string name="asr">ASR</string>
+    <string name="custom_model">Custom Models</string>
 </resources>

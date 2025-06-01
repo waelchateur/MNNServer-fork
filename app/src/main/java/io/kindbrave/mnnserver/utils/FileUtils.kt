@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
 import com.alibaba.mls.api.ApplicationProvider
+import com.alibaba.mnnllm.android.model.ModelUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

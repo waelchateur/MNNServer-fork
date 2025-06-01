@@ -43,6 +43,7 @@ import io.kindbrave.mnnserver.ui.components.ModelNameDialog
 fun ModelListScreen(navController: NavHostController) {
     val viewModel: ModelListViewModel = hiltViewModel()
     val downloadModels by viewModel.downloadModels.collectAsState()
+    val customDownloadModels by viewModel.customDownloadModels.collectAsState()
     val userUploadModels by viewModel.userUploadModels.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -109,6 +110,24 @@ fun ModelListScreen(navController: NavHostController) {
                                     Text(stringResource(R.string.embedding))
                                 }
                             )
+                            DropdownMenuItem(
+                                onClick = {
+                                    showDropdown = false
+                                    modelFilter = ModelFilter.Asr
+                                },
+                                text = {
+                                    Text(stringResource(R.string.asr))
+                                }
+                            )
+                            DropdownMenuItem(
+                                onClick = {
+                                    showDropdown = false
+                                    modelFilter = ModelFilter.Custom
+                                },
+                                text = {
+                                    Text(stringResource(R.string.custom_model))
+                                }
+                            )
                         }
                     }
                 }
@@ -136,13 +155,34 @@ fun ModelListScreen(navController: NavHostController) {
 //            items(userUploadModels.size) { index ->
 //                UserUploadModelItemView(model = userUploadModels[index], loadedModels.contains(userUploadModels[index].id))
 //            }
-            val filterModels = when (modelFilter) {
+            val filterCustomDownloadModels = when (modelFilter) {
+                ModelFilter.All -> customDownloadModels
+                ModelFilter.Chat -> customDownloadModels.filter { it.getTags().contains("embedding").not() }
+                ModelFilter.Embedding -> customDownloadModels.filter { it.getTags().contains("embedding") }
+                ModelFilter.Asr -> customDownloadModels.filter { it.getTags().contains("asr") }
+                ModelFilter.Custom -> customDownloadModels
+            }
+            items(filterCustomDownloadModels.size) { index ->
+                DownloadModelItemView(
+                    model = filterCustomDownloadModels[index],
+                    loaded = loadedModels.contains(filterCustomDownloadModels[index].modelId),
+                    type = DownloadModelType.CUSTOM
+                )
+            }
+
+            val filterDownloadModels = when (modelFilter) {
                 ModelFilter.All -> downloadModels
                 ModelFilter.Chat -> downloadModels.filter { it.getTags().contains("embedding").not() }
                 ModelFilter.Embedding -> downloadModels.filter { it.getTags().contains("embedding") }
+                ModelFilter.Asr -> downloadModels.filter { it.getTags().contains("asr") }
+                ModelFilter.Custom -> emptyList()
             }
-            items(filterModels.size) { index ->
-                DownloadModelItemView(model = filterModels[index], loadedModels.contains(filterModels[index].modelId))
+            items(filterDownloadModels.size) { index ->
+                DownloadModelItemView(
+                    model = filterDownloadModels[index],
+                    loaded = loadedModels.contains(filterDownloadModels[index].modelId),
+                    type = DownloadModelType.OFFICIAL
+                )
             }
         }
         if (showEnterModelNameDialog) {
@@ -161,6 +201,15 @@ fun ModelListScreen(navController: NavHostController) {
 
     val getDownloadModelState by viewModel.getDownloadModelState.collectAsState()
     when (getDownloadModelState) {
+        is GetDownloadModelState.Error -> {
+            LaunchedEffect(Unit) {
+                snackbarHostState.showSnackbar((getDownloadModelState as GetDownloadModelState.Error).message)
+            }
+        }
+        else -> {}
+    }
+    val getCustomDownloadModelState by viewModel.getCustomDownloadModelState.collectAsState()
+    when (getCustomDownloadModelState) {
         is GetDownloadModelState.Error -> {
             LaunchedEffect(Unit) {
                 snackbarHostState.showSnackbar((getDownloadModelState as GetDownloadModelState.Error).message)
@@ -188,4 +237,6 @@ sealed class ModelFilter  {
     object All : ModelFilter()
     object Chat : ModelFilter()
     object Embedding : ModelFilter()
+    object Asr: ModelFilter()
+    object Custom: ModelFilter()
 }

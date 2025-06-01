@@ -5,6 +5,7 @@ package io.kindbrave.mnnserver.engine
 
 import android.util.Log
 import com.alibaba.mls.api.ApplicationProvider
+import com.alibaba.mnnllm.android.model.ModelUtils
 import com.elvishew.xlog.XLog
 import com.google.gson.Gson
 import io.kindbrave.mnnserver.repository.SettingsRepository
@@ -12,8 +13,7 @@ import io.kindbrave.mnnserver.engine.MNNLlm.AudioDataListener
 import io.kindbrave.mnnserver.engine.MNNLlm.GenerateProgressListener
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelConfig
-import io.kindbrave.mnnserver.utils.ModelPreferences
-import io.kindbrave.mnnserver.utils.ModelUtils
+import io.kindbrave.mnnserver.utils.CustomModelUtils
 import java.io.File
 
 class ChatSession(

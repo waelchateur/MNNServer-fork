@@ -17,13 +17,18 @@ class MNNModelRepository @Inject constructor(
 ){
     private val modelDownloadManager = ModelDownloadManager.getInstance(context)
 
-    @LogAfter("")
     suspend fun loadModel(model: ModelItem) {
         if (llmService.isModelLoaded(model.modelId.toString())) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
         val modelPath = getDownloadPath(model.modelId!!)
         if (model.getTags().contains("embedding")) {
             llmService.createEmbeddingSession(
+                modelId = model.modelId!!,
+                modelDir = modelPath,
+                sessionId = model.modelId!!
+            )
+        } else if (model.getTags().contains("asr")) {
+            llmService.createAsrSession(
                 modelId = model.modelId!!,
                 modelDir = modelPath,
                 sessionId = model.modelId!!
@@ -43,6 +48,8 @@ class MNNModelRepository @Inject constructor(
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
         if (model.getTags().contains("embedding")) {
             llmService.removeEmbeddingSession(model.modelId!!)
+        } else if (model.getTags().contains("asr")) {
+            llmService.removeAsrSession(model.modelId!!)
         } else {
             llmService.removeChatSession(model.modelId!!)
         }

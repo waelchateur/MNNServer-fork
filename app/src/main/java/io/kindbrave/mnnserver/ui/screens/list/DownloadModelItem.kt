@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -37,16 +38,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alibaba.mls.api.ModelItem
+import com.alibaba.mnnllm.android.model.ModelUtils
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.utils.ModelUtils
+import io.kindbrave.mnnserver.utils.CustomModelUtils
 import kotlin.collections.get
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
+fun DownloadModelItemView(model: ModelItem, loaded: Boolean, type: DownloadModelType) {
     val viewModel: ModelListViewModel = hiltViewModel()
-    viewModel.updateDownloadState(model)
-    val downloadState by viewModel.downloadStateMap[model.modelId]!!.collectAsState()
     val tags = remember(model) { model.getTags() }
     val modelName = remember(model) { model.modelName ?: "" }
     val drawableId = remember(model) { ModelUtils.getDrawableId(modelName) }
@@ -57,6 +57,16 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { }
+
+    when (type) {
+        DownloadModelType.OFFICIAL -> {
+            viewModel.updateDownloadState(model)
+        }
+        DownloadModelType.CUSTOM -> {
+            viewModel.updateCustomDownloadState(model)
+        }
+    }
+    val downloadState by viewModel.downloadStateMap[model.modelId]!!.collectAsState()
 
     Row(
         modifier = Modifier
@@ -77,7 +87,16 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
         when (downloadState) {
             is ModelDownloadState.Start, is ModelDownloadState.Progress -> {
                 IconButton(
-                    onClick = { viewModel.pauseDownload(model) },
+                    onClick = {
+                        when (type) {
+                            DownloadModelType.OFFICIAL -> {
+                                viewModel.pauseDownload(model)
+                            }
+                            DownloadModelType.CUSTOM -> {
+                                viewModel.pauseCustomDownload(model)
+                            }
+                        }
+                    },
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
@@ -98,7 +117,14 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
                                 launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
                         }
-                        viewModel.startDownload(model)
+                        when (type) {
+                            DownloadModelType.OFFICIAL -> {
+                                viewModel.startDownload(model)
+                            }
+                            DownloadModelType.CUSTOM -> {
+                                viewModel.startCustomDownload(model)
+                            }
+                        }
                     },
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
@@ -142,7 +168,16 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean) {
                         )
                     }
                     IconButton(
-                        onClick = { viewModel.deleteDownloadModel(model) },
+                        onClick = {
+                            when (type) {
+                                DownloadModelType.OFFICIAL -> {
+                                    viewModel.deleteDownloadModel(model)
+                                }
+                                DownloadModelType.CUSTOM -> {
+                                    viewModel.deleteCustomDownloadModel(model)
+                                }
+                            }
+                        },
                         modifier = Modifier.align(Alignment.CenterVertically).size(20.dp)
                     ) {
                         Icon(
@@ -182,6 +217,7 @@ private fun ModelIcon(drawableId: Int) {
 @Composable
 private fun ModelName(modelName: String, tags: List<String>, downloadState: ModelDownloadState) {
     Text(
+        modifier = Modifier.basicMarquee(),
         text = modelName,
         fontSize = 16.sp,
         maxLines = 1

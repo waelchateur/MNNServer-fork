@@ -4,8 +4,8 @@
 package io.kindbrave.mnnserver.utils
 
 import android.content.Context
-import io.kindbrave.mnnserver.utils.ModelUtils.safeModelId
 import androidx.core.content.edit
+import com.alibaba.mnnllm.android.model.ModelUtils.safeModelId
 
 object ModelPreferences {
     const val TAG: String = "ModelPreferences"

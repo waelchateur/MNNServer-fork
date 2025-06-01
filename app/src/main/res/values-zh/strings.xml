@@ -60,4 +60,6 @@
     <string name="no_thinking_mode">非思考模式</string>
     <string name="mmap_option">mmap</string>
     <string name="backend_type">backend</string>
+    <string name="asr">语音识别|ASR</string>
+    <string name="custom_model">第三方模型</string>
 </resources> 
