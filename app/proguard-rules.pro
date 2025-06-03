@@ -49,6 +49,8 @@
 
 -keep class kotlin.Pair { *; }
 
+-keep class io.kindbrave.mnnserver.utils.ModelConfig {*;}
+
 -dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
 -dontwarn io.netty.internal.tcnative.AsyncTask
 -dontwarn io.netty.internal.tcnative.Buffer

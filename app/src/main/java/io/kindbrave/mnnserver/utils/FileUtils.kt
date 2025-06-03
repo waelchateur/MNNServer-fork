@@ -5,6 +5,7 @@ package io.kindbrave.mnnserver.utils
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import com.alibaba.mls.api.ApplicationProvider
 import com.alibaba.mnnllm.android.model.ModelUtils
@@ -156,6 +157,41 @@ object FileUtils {
     fun clearMmapCache(modelId: String) {
         DownloadFileUtils.deleteDirectoryRecursively(File(getMmapDir(modelId, true)))
         DownloadFileUtils.deleteDirectoryRecursively(File(getMmapDir(modelId, false)))
+    }
+
+    fun saveBase64WavToCache(context: Context, base64String: String): String {
+        val audioDir = File(context.cacheDir, "audio")
+        if (!audioDir.exists()) {
+            audioDir.mkdirs()
+        }
+
+        val fileName = "${System.currentTimeMillis()}.wav"
+        val outputFile = File(audioDir, fileName)
+
+        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+        FileOutputStream(outputFile).use { it.write(decodedBytes) }
+
+        return outputFile.absolutePath
+    }
+
+    fun saveBase64JpgToCache(context: Context, base64String: String): String {
+        val imgDir = File(context.cacheDir, "img")
+        if (!imgDir.exists()) {
+            imgDir.mkdirs()
+        }
+
+        val fileName = "${System.currentTimeMillis()}.jpg"
+        val outputFile = File(imgDir, fileName)
+
+        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+        FileOutputStream(outputFile).use { it.write(decodedBytes) }
+
+        return outputFile.absolutePath
+    }
+
+    fun extractAudioPath(content: String): String? {
+        val regex = Regex("<audio>(.*?)</audio>", RegexOption.DOT_MATCHES_ALL)
+        return regex.find(content)?.groups?.get(1)?.value
     }
 }
 

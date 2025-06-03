@@ -1,9 +1,7 @@
 package io.kindbrave.mnnserver.engine
 
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import io.kindbrave.mnnserver.utils.FileUtils
 
 class AsrSession(
     override val modelId: String,
@@ -11,8 +9,6 @@ class AsrSession(
     override val configPath: String,
 ) : Session(modelId, sessionId, configPath) {
     private val tag = AsrSession::class.java.simpleName
-
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private var nativePtr: Long = 0
 
@@ -33,15 +29,17 @@ class AsrSession(
         }
     }
 
-    fun generate(wavFilePath: String, progressListener: MNNAsr.AsrCallback) {
-        coroutineScope.launch {
-            synchronized(this) {
-                generating = true
-                MNNAsr.recognizeFromFileStreamNative(nativePtr, wavFilePath, progressListener)
-                generating = false
-                if (releaseRequeted) {
-                    release()
-                }
+    fun generate(wavFileTag: String, progressListener: MNNAsr.AsrCallback) {
+        synchronized(this) {
+            val wavFilePath = FileUtils.extractAudioPath(wavFileTag)
+            if (wavFilePath == null) {
+                return
+            }
+            generating = true
+            MNNAsr.recognizeFromFileStreamNative(nativePtr, wavFilePath, progressListener)
+            generating = false
+            if (releaseRequeted) {
+                release()
             }
         }
     }

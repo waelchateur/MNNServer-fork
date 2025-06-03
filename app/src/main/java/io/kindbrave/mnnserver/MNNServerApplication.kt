@@ -13,6 +13,7 @@ import com.elvishew.xlog.printer.file.clean.FileLastModifiedCleanStrategy
 import com.elvishew.xlog.printer.file.naming.ChangelessFileNameGenerator
 import com.elvishew.xlog.printer.file.naming.DateFileNameGenerator
 import dagger.hilt.android.HiltAndroidApp
+import kotlin.system.exitProcess
 
 @HiltAndroidApp
 class MNNServerApplication : Application() {
@@ -21,6 +22,7 @@ class MNNServerApplication : Application() {
         super.onCreate()
         initXLog()
         ApplicationProvider.set(this)
+        setDefaultCacheHandler()
     }
 
     private fun initXLog() {
@@ -33,5 +35,15 @@ class MNNServerApplication : Application() {
         val config = LogConfiguration.Builder()
             .build()
         XLog.init(config, filePrinter, AndroidPrinter())
+    }
+
+    private fun setDefaultCacheHandler() {
+        Thread.setDefaultUncaughtExceptionHandler(object : Thread.UncaughtExceptionHandler {
+            override fun uncaughtException(t: Thread, e: Throwable) {
+                XLog.e("Uncaught exception in thread " + t.name, e)
+
+                exitProcess(1)
+            }
+        })
     }
 }
