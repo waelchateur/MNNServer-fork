@@ -4,6 +4,10 @@
 
 一个支持外部调用和向量模型特性的第三方MNN服务端。
 
+# 新闻 🔥
+
+- [2025/06/03 v0.0.3] 支持离线语音识别模型
+
 # 截图
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -30,6 +34,7 @@ MNN Server是一个Android第三方MNN服务端，其可以为外部程序提供
 
 感谢以下项目：
 - **[MNN](https://github.com/alibaba/MNN)**: 没有MNN，这个项目就无法存在。
+- **[mnn-asr](https://github.com/wangzhaode/mnn-asr)**
 
 # 许可证
 本项目开源，遵循GPL-3 License。

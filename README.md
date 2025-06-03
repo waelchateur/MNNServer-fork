@@ -4,6 +4,11 @@
 
 A third-party MNN server that supports external invocation and embedding model features.
 
+# News 🔥
+
+- [2025/06/03 v0.0.3] Support offline voice recognition models
+
+
 # Screenshots
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -30,6 +35,7 @@ MNN Server is an Android third-party MNN server that can provide external progra
 
 We would like to express our gratitude to the following projects:
 - **[MNN](https://github.com/alibaba/MNN)**: Without MNN, this project would not exist.
+- **[mnn-asr](https://github.com/wangzhaode/mnn-asr)**
 
 # License
 
