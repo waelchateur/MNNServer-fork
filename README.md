@@ -2,7 +2,7 @@
 
 [简体中文](./README_zh-CN.md) 
 
-A third-party MNN server that supports external invocation and embedding model features.
+A third-party MNN server supporting external calls, vector model, and speech recognition model features.
 
 # News 🔥
 
