@@ -34,26 +34,34 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         asr.cpp
         tokenizer.cpp
         asr_mnn_jni.cpp
+        crash_util.cpp
 )
 #mnn
-set (MNN_ROOT "${CMAKE_SOURCE_DIR}/../../../../../../../c/MNN")
-message(ERROR "MNN_ROOT: ${MNN_ROOT}")
-include_directories("${MNN_ROOT}/include/")
+set (MNN_SOURCE_ROOT "${CMAKE_SOURCE_DIR}/../../../../../../../c/MNN")
+set (MNN_INSTALL_ROOT "${MNN_SOURCE_ROOT}/project/android/build_64")
+
+message(INFO "MNN_SOURCE_ROOT: ${MNN_SOURCE_ROOT}")
+message(INFO "MNN_INSTALL_ROOT: ${MNN_INSTALL_ROOT}")
+
+include_directories("${MNN_SOURCE_ROOT}/include/")
 
 #diffusion
-include_directories("${MNN_ROOT}/transformers/diffusion/engine/include/")
+include_directories("${MNN_SOURCE_ROOT}/transformers/diffusion/engine/include/")
 
 #llm
-#include_directories("${MNN_ROOT}/transformers/llm/engine/include")
-include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${MNN_SOURCE_ROOT}/transformers/llm/engine/include")
+
+#audio
+include_directories("${MNN_SOURCE_ROOT}/tools/audio/include")
+include_directories("${CMAKE_SOURCE_DIR}/third_party")
 
 include_directories("${CMAKE_SOURCE_DIR}/third_party")
 
 # asr
-include_directories("${MNN_ROOT}/3rd_party")
+include_directories("${MNN_SOURCE_ROOT}/3rd_party")
 
 # Add library paths
-set(LIB_PATH "${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}")
+set(LIB_PATH "${MNN_INSTALL_ROOT}/lib")
 
 # Link the shared library
 add_library(MNN SHARED IMPORTED)

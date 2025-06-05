@@ -3,7 +3,13 @@ package io.kindbrave.mnnserver.webserver.utils
 import android.content.Context
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.webserver.request.Content
+import io.kindbrave.mnnserver.webserver.request.FunctionTool
 import io.kindbrave.mnnserver.webserver.request.Message
+import io.kindbrave.mnnserver.webserver.response.ChatChoice
+import io.kindbrave.mnnserver.webserver.response.ChatCompletionResponse
+import io.kindbrave.mnnserver.webserver.response.ChatMessage
+import io.kindbrave.mnnserver.webserver.response.FunctionCall
+import io.kindbrave.mnnserver.webserver.response.Usage
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Writer
@@ -57,6 +63,39 @@ object MNNHandlerUtils {
             history.add(Pair(role, parsedContent))
         }
         return history
+    }
+
+    fun buildChatCompletionResponse(
+        id: String,
+        created: Long,
+        model: String,
+        content: String,
+        finishReason: String = "stop",
+        functionCall: List<FunctionCall>? = null,
+        promptTokens: Long?,
+        completionTokens: Long?
+    ): ChatCompletionResponse {
+        return ChatCompletionResponse(
+            id = id,
+            created = created,
+            model = model,
+            choices = listOf(
+                ChatChoice(
+                    index = 0,
+                    message = ChatMessage(
+                        role = "assistant",
+                        content = content,
+                        functionCall = functionCall
+                    ),
+                    finishReason = finishReason
+                )
+            ),
+            usage = if (promptTokens != null && completionTokens != null) Usage(
+                promptTokens = promptTokens,
+                completionTokens = completionTokens,
+                totalTokens = (promptTokens + completionTokens)
+            ) else null
+        )
     }
 }
 

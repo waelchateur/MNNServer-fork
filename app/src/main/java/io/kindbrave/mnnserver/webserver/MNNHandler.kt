@@ -9,8 +9,11 @@ import io.kindbrave.mnnserver.engine.MNNAsr
 import io.kindbrave.mnnserver.engine.MNNLlm
 import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.webserver.request.ChatGenerateRequest
+import io.kindbrave.mnnserver.webserver.request.FunctionTool
 import io.kindbrave.mnnserver.webserver.request.Message
+import io.kindbrave.mnnserver.webserver.response.ChatCompletionResponse
 import io.kindbrave.mnnserver.webserver.response.Model
+import io.kindbrave.mnnserver.webserver.utils.FunctionCallUtils
 import io.kindbrave.mnnserver.webserver.utils.MNNHandlerUtils
 import io.kindbrave.mnnserver.webserver.utils.writeChunk
 import io.kindbrave.mnnserver.webserver.utils.writeLastChunk
@@ -44,17 +47,17 @@ class MNNHandler @Inject constructor(
         return modelList
     }
 
-    fun completions(body: ChatGenerateRequest): JSONObject {
+    fun completions(body: ChatGenerateRequest): ChatCompletionResponse {
         val modelId = body.model
         XLog.tag(tag).d("completions: modelId:${modelId}")
         val messages = body.messages
-        if (modelId.isEmpty() || messages == null || messages.isEmpty()) {
+        if (modelId.isEmpty() || messages.isEmpty()) {
             throw InvalidParameterException("please give modelId or messages params")
         }
 
         val chatSession = llmService.getChatSession(modelId)
         if (chatSession != null) {
-            return chatSessionGenerate(messages, modelId, chatSession)
+            return chatSessionGenerate(messages, body.tools, modelId, chatSession)
         }
         val asrSession = llmService.getAsrSession(modelId)
         if (asrSession != null) {
@@ -68,7 +71,7 @@ class MNNHandler @Inject constructor(
         XLog.tag(tag).d("completionsStreaming: modelId:${modelId}")
         val messages = body.messages
 
-        if (modelId.isEmpty() || messages == null || messages.isEmpty()) {
+        if (modelId.isEmpty() || messages.isEmpty()) {
             throw InvalidParameterException("please give modelId or messages params")
         }
 
@@ -121,11 +124,19 @@ class MNNHandler @Inject constructor(
 
     private fun chatSessionGenerate(
         messages: List<Message>,
+        tools: List<FunctionTool>?,
         modelId: String,
         chatSession: ChatSession
-    ): JSONObject {
+    ): ChatCompletionResponse {
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
+
+        val isFunctionCall = tools.isNullOrEmpty().not()
+
+        if (isFunctionCall) {
+            val systemPrompt = FunctionCallUtils.buildFunctionCallPrompt(tools)
+            chatSession.updateSystemPrompt(systemPrompt)
+        }
 
         val history = MNNHandlerUtils.buildChatHistory(messages, context)
         val generateResponse = StringBuilder()
@@ -146,23 +157,22 @@ class MNNHandler @Inject constructor(
         })
         val promptLen = if (metrics.containsKey("prompt_len")) metrics["prompt_len"] as Long else 0L
         val decodeLen = if (metrics.containsKey("decode_len")) metrics["decode_len"] as Long else 0L
-        val response = JSONObject()
-            .put("id", "chatcmpl-$messageId")
-            .put("object", "chat.completion")
-            .put("created", createdTime)
-            .put("model", modelId)
-            .put("choices", JSONArray().put(
-                JSONObject()
-                    .put("index", 0)
-                    .put("message", JSONObject()
-                        .put("role", "assistant")
-                        .put("content", generateResponse.toString()))
-                    .put("finish_reason", "stop")
-            ))
-            .put("usage", JSONObject()
-                .put("prompt_tokens", promptLen)
-                .put("completion_tokens", decodeLen)
-                .put("total_tokens", promptLen + decodeLen))
+
+        // function call
+        val functionCall = if (isFunctionCall) {
+            FunctionCallUtils.tryToParseFunctionCall(generateResponse.toString())
+        } else null
+
+        val response = MNNHandlerUtils.buildChatCompletionResponse(
+            id = messageId,
+            created = createdTime,
+            model = modelId,
+            content = generateResponse.toString(),
+            functionCall = functionCall,
+            finishReason = if (functionCall != null) "function_call" else "stop",
+            promptTokens = promptLen,
+            completionTokens = decodeLen
+        )
         XLog.tag(tag).d("chatSessionGenerate modelId:$modelId done")
         return response
     }
@@ -238,7 +248,7 @@ class MNNHandler @Inject constructor(
         messages: List<Message>,
         modelId: String,
         asrSession: AsrSession
-    ): JSONObject {
+    ): ChatCompletionResponse {
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
 
@@ -264,23 +274,14 @@ class MNNHandler @Inject constructor(
         })
         val promptLen = 0L
         val decodeLen = 0L
-        val response = JSONObject()
-            .put("id", "chatcmpl-$messageId")
-            .put("object", "chat.completion")
-            .put("created", createdTime)
-            .put("model", modelId)
-            .put("choices", JSONArray().put(
-                JSONObject()
-                    .put("index", 0)
-                    .put("message", JSONObject()
-                        .put("role", "assistant")
-                        .put("content", generateResponse.toString()))
-                    .put("finish_reason", "stop")
-            ))
-            .put("usage", JSONObject()
-                .put("prompt_tokens", promptLen)
-                .put("completion_tokens", decodeLen)
-                .put("total_tokens", promptLen + decodeLen))
+        val response = MNNHandlerUtils.buildChatCompletionResponse(
+            id = "chatcmpl-$messageId",
+            created = createdTime,
+            model = modelId,
+            content = generateResponse.toString(),
+            promptTokens = promptLen,
+            completionTokens = decodeLen
+        )
         XLog.tag(tag).d("asrSessionGenerate modelId:$modelId done")
         return response
     }

@@ -152,9 +152,9 @@ fun ModelListScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-//            items(userUploadModels.size) { index ->
-//                UserUploadModelItemView(model = userUploadModels[index], loadedModels.contains(userUploadModels[index].id))
-//            }
+            items(userUploadModels.size) { index ->
+                UserUploadModelItemView(model = userUploadModels[index], loadedModels.contains(userUploadModels[index].id))
+            }
             val filterCustomDownloadModels = when (modelFilter) {
                 ModelFilter.All -> customDownloadModels
                 ModelFilter.Chat -> customDownloadModels.filter { it.getTags().contains("embedding").not() }

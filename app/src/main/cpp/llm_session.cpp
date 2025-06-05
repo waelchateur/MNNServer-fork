@@ -60,7 +60,8 @@ std::string getR1AssistantString(std::string assistant_content) {
 }
 
 void LlmSession::Reset() {
-    history_.resize(1);
+    history_.resize(0);
+    history_.emplace_back("system", GetSystemPromptString(system_prompt_, is_r1_));
 }
 
 LlmSession::LlmSession(std::string model_path, json config, json extra_config, std::vector<std::string> history):
@@ -182,6 +183,7 @@ const MNN::Transformer::LlmContext * LlmSession::Response(
     }};
     std::ostream output_ostream(&stream_buffer);
     MNN_DEBUG("submitNative history count %zu", history_.size());
+    prompt_string_for_debug = "";
     for (auto & it : history_) {
         prompt_string_for_debug += it.second;
     }
@@ -230,7 +232,7 @@ void LlmSession::SetMaxNewTokens(int i) {
 
 void LlmSession::setSystemPrompt(std::string system_prompt) {
     system_prompt_= std::move(system_prompt);
-    if (history_.size() > 1) {
+    if (!history_.empty()) {
         history_.at(0).second = GetSystemPromptString(system_prompt_, is_r1_);
     } else {
         history_.emplace_back("system", GetSystemPromptString(system_prompt_, is_r1_));
