@@ -2,6 +2,7 @@ package io.kindbrave.mnnserver.webserver.response
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class ChatCompletionResponse(
@@ -37,5 +38,5 @@ data class Usage(
 @Serializable
 data class FunctionCall(
     val name: String,
-    val arguments: String
+    val arguments: JsonElement
 )

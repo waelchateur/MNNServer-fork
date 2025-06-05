@@ -20,5 +20,6 @@ fun Application.configureRouting(mnnHandler: MNNHandler) {
         get("/") {
             call.respondText("MNN Server is Running:)")
         }
+        // openAPIRoutes()
     }
 }
