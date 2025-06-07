@@ -66,18 +66,20 @@ fun ModelConfigBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SectionCard(title = stringResource(R.string.common_settings)) {
-                SettingRow(
-                    title = stringResource(R.string.thinking_mode),
-                    control = {
-                        Switch(
-                            checked = viewModel.thinkMode.value,
-                            onCheckedChange = { viewModel.setThinkingMode(it) }
-                        )
-                    },
-                    onClick = {
-                        viewModel.setThinkingMode(viewModel.thinkMode.value.not())
-                    }
-                )
+                if (viewModel.isNeedShowThinkConfig()) {
+                    SettingRow(
+                        title = stringResource(R.string.thinking_mode),
+                        control = {
+                            Switch(
+                                checked = viewModel.thinkMode.value,
+                                onCheckedChange = { viewModel.setThinkingMode(it) }
+                            )
+                        },
+                        onClick = {
+                            viewModel.setThinkingMode(viewModel.thinkMode.value.not())
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

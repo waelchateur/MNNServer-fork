@@ -352,7 +352,7 @@ namespace MNN {
             return text;
         }
 
-// std::string Asr::recognize(std::vector<float>& waveforms) {
+        // std::string Asr::recognize(std::vector<float>& waveforms) {
         std::string Asr::recognize(VARP waveforms) {
             size_t wave_length = waveforms->getInfo()->size;
             if (wave_length < 16 * 60 && cache_->is_final) {
@@ -489,7 +489,7 @@ namespace MNN {
                 total += res;
 
                 if (on_partial) {
-                    on_partial(res);  // 每步调用 partial
+                    on_partial(res);
                 }
             }
 

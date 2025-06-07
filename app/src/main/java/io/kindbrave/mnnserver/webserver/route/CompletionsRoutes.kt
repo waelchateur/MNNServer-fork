@@ -3,6 +3,8 @@ package io.kindbrave.mnnserver.webserver.route
 import com.elvishew.xlog.XLog
 import io.kindbrave.mnnserver.webserver.MNNHandler
 import io.kindbrave.mnnserver.webserver.request.ChatGenerateRequest
+import io.kindbrave.mnnserver.webserver.utils.writeToolCallsChunk
+import io.kindbrave.mnnserver.webserver.utils.writeLastChunk
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText

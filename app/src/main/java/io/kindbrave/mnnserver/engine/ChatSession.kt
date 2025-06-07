@@ -51,12 +51,14 @@ class ChatSession(
             put("diffusion_memory_mode", settingsRepository.getDiffusionMemoryMode())
         }
         val extraConfig = ModelConfig.loadConfig(configPath, getModelSettingsFile())?.apply {
-            extraAssistantPrompt = if (this.thinkingMode == true) {
-                "<|im_start|>assistant\n%s<|im_end|>\n"
-            } else {
-                "<|im_start|>assistant\n<think>\n</think>%s<|im_end|>\n"
+            if (io.kindbrave.mnnserver.utils.ModelUtils.isNeedConfigThinkMode(modelId)) {
+                extraAssistantPrompt = if (this.thinkingMode == true) {
+                    "<|im_start|>assistant\n%s<|im_end|>\n"
+                } else {
+                    "<|im_start|>assistant\n<think>\n</think>%s<|im_end|>\n"
+                }
+                this.assistantPromptTemplate = extraAssistantPrompt
             }
-            this.assistantPromptTemplate = extraAssistantPrompt
         }
         if (extraConfig?.mmap == true) {
             rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))

@@ -17,6 +17,7 @@ import io.kindbrave.mnnserver.webserver.utils.FunctionCallUtils
 import io.kindbrave.mnnserver.webserver.utils.MNNHandlerUtils
 import io.kindbrave.mnnserver.webserver.utils.writeChunk
 import io.kindbrave.mnnserver.webserver.utils.writeLastChunk
+import io.kindbrave.mnnserver.webserver.utils.writeToolCallsChunk
 import kotlinx.io.IOException
 import org.json.JSONArray
 import org.json.JSONObject
@@ -77,7 +78,7 @@ class MNNHandler @Inject constructor(
 
         val chatSession = llmService.getChatSession(modelId)
         if (chatSession != null) {
-            chatSessionStreamingGenerate(messages, modelId, writer, chatSession)
+            chatSessionStreamingGenerate(messages, body.tools, modelId, writer, chatSession)
             return
         }
         val asrSession = llmService.getAsrSession(modelId)
@@ -131,11 +132,12 @@ class MNNHandler @Inject constructor(
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
 
-        val isFunctionCall = tools.isNullOrEmpty().not()
-
-        if (isFunctionCall) {
-            val systemPrompt = FunctionCallUtils.buildFunctionCallPrompt(tools)
-            chatSession.updateSystemPrompt(systemPrompt)
+        val hasPreviousToolResponse = messages.any { it.role == "tool" && !it.toolCallId.isNullOrEmpty() }
+        val isToolCall = tools.isNullOrEmpty().not()
+        if (isToolCall && hasPreviousToolResponse.not()) {
+            updateToolCallSystemPrompt(chatSession, tools)
+        } else {
+            updateAssistantSystemPrompt(chatSession)
         }
 
         val history = MNNHandlerUtils.buildChatHistory(messages, context)
@@ -158,9 +160,9 @@ class MNNHandler @Inject constructor(
         val promptLen = if (metrics.containsKey("prompt_len")) metrics["prompt_len"] as Long else 0L
         val decodeLen = if (metrics.containsKey("decode_len")) metrics["decode_len"] as Long else 0L
 
-        // function call
-        val functionCall = if (isFunctionCall) {
-            FunctionCallUtils.tryToParseFunctionCall(generateResponse.toString())
+        // tool call
+        val toolCalls = if (isToolCall && hasPreviousToolResponse.not()) {
+            FunctionCallUtils.tryToParseToolCall(generateResponse.toString())
         } else null
 
         val response = MNNHandlerUtils.buildChatCompletionResponse(
@@ -168,8 +170,8 @@ class MNNHandler @Inject constructor(
             created = createdTime,
             model = modelId,
             content = generateResponse.toString(),
-            functionCall = functionCall,
-            finishReason = if (functionCall != null) "function_call" else "stop",
+            toolCalls = toolCalls,
+            finishReason = if (toolCalls != null) "tool_calls" else "stop",
             promptTokens = promptLen,
             completionTokens = decodeLen
         )
@@ -179,6 +181,7 @@ class MNNHandler @Inject constructor(
 
     private fun chatSessionStreamingGenerate(
         messages: List<Message>,
+        tools: List<FunctionTool>?,
         modelId: String,
         writer: Writer,
         chatSession: ChatSession
@@ -186,15 +189,27 @@ class MNNHandler @Inject constructor(
         val messageId = UUID.randomUUID().toString()
         val createdTime = System.currentTimeMillis() / 1000
 
+        val hasPreviousToolResponse = messages.any { it.role == "tool" && !it.toolCallId.isNullOrEmpty() }
+        XLog.tag(tag).d("chatSessionGenerate modelId:$modelId hasPreviousToolResponse:$hasPreviousToolResponse")
+        val isToolCall = tools.isNullOrEmpty().not()
+        if (isToolCall && hasPreviousToolResponse.not()) {
+            updateToolCallSystemPrompt(chatSession, tools)
+        } else {
+            updateAssistantSystemPrompt(chatSession)
+        }
+
         val history = MNNHandlerUtils.buildChatHistory(messages, context)
         // 首先发送空白内容防止回复过慢客户端断开连接
         writer.writeChunk(messageId, createdTime, modelId, "")
+
+        val generateResponse = StringBuilder()
         val metrics = chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
             override fun onProgress(progress: String?): Boolean {
                 return try {
                     if (progress == null) {
                         true
                     } else {
+                        generateResponse.append(progress)
                         writer.writeChunk(messageId, createdTime, modelId, progress)
                         false
                     }
@@ -204,8 +219,31 @@ class MNNHandler @Inject constructor(
                 }
             }
         })
-        writer.writeLastChunk(messageId, createdTime, modelId, metrics)
-        XLog.tag(tag).d("chatSessionStreamingGenerate modelId:$modelId done")
+
+        // tool call
+        val toolCalls = if (isToolCall && hasPreviousToolResponse.not()) {
+            FunctionCallUtils.tryToParseToolCall(generateResponse.toString())
+        } else null
+
+        if (toolCalls != null) {
+            writer.writeToolCallsChunk(
+                messageId,
+                createdTime,
+                modelId,
+                toolCalls
+            )
+            writer.writeLastChunk(
+                messageId,
+                createdTime,
+                modelId,
+                finishReason = "tool_calls",
+                metrics = metrics
+            )
+            XLog.tag(tag).d("chatSessionStreamingGenerate tool call modelId:$modelId done")
+        } else {
+            writer.writeLastChunk(messageId, createdTime, modelId, metrics)
+            XLog.tag(tag).d("chatSessionStreamingGenerate modelId:$modelId done")
+        }
     }
 
     private fun asrSessionStreamingGenerate(
@@ -284,5 +322,14 @@ class MNNHandler @Inject constructor(
         )
         XLog.tag(tag).d("asrSessionGenerate modelId:$modelId done")
         return response
+    }
+
+    private fun updateToolCallSystemPrompt(chatSession: ChatSession, tools: List<FunctionTool>) {
+        val systemPrompt = FunctionCallUtils.buildFunctionCallPrompt(tools)
+        chatSession.updateSystemPrompt(systemPrompt)
+    }
+
+    private fun updateAssistantSystemPrompt(chatSession: ChatSession) {
+        chatSession.updateSystemPrompt("You are a helpful assistant.")
     }
 }

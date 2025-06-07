@@ -7,10 +7,12 @@ import io.kindbrave.mnnserver.webserver.config.configureLogging
 import io.kindbrave.mnnserver.webserver.config.configureRouting
 import io.kindbrave.mnnserver.webserver.config.configureSerialization
 import io.kindbrave.mnnserver.webserver.config.configureStatusPages
+import io.kindbrave.mnnserver.webserver.config.configureWebSockets
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.websocket.WebSockets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ class KtorServer @Inject constructor(
                 configureCORS()
                 configureLogging()
                 configureStatusPages()
+                configureWebSockets()
                 configureRouting(mnnHandler)
             }.start(true)
         }

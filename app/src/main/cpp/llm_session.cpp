@@ -130,7 +130,7 @@ void LlmSession::SetHistory(
                     history_.emplace_back("assistant", getR1AssistantString(i.second));
                 }
             } else {
-                if (i.first == "user") {
+                if (i.first == "user" || i.first == "tool") {
                     history_.emplace_back("user", i.second);
                 } else {
                     history_.emplace_back("assistant", deleteThinkPart(i.second));

@@ -1,6 +1,7 @@
 package io.kindbrave.mnnserver.webserver.config
 
 import io.kindbrave.mnnserver.webserver.MNNHandler
+import io.kindbrave.mnnserver.webserver.route.audioRoutes
 import io.kindbrave.mnnserver.webserver.route.completionsRoutes
 import io.kindbrave.mnnserver.webserver.route.embeddingsRoutes
 import io.kindbrave.mnnserver.webserver.route.modelsRoutes
@@ -18,8 +19,8 @@ fun Application.configureRouting(mnnHandler: MNNHandler) {
             embeddingsRoutes(mnnHandler)
         }
         get("/") {
-            call.respondText("MNN Server is Running:)")
+            call.respondText("MNN Server is Running :)")
         }
-        // openAPIRoutes()
+        audioRoutes(mnnHandler)
     }
 }

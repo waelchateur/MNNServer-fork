@@ -1,5 +1,6 @@
 package io.kindbrave.mnnserver.webserver.request
 
+import io.kindbrave.mnnserver.webserver.response.ToolCall
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
@@ -21,7 +22,9 @@ data class ChatGenerateRequest(
 data class Message(
     @Serializable(with = ContentSerializer::class)
     val content: Content,
-    val role: String
+    val role: String,
+    @SerialName("tool_calls") val toolCalls: List<ToolCall>? = null,
+    @SerialName("tool_call_id") val toolCallId: String? = null
 )
 
 @Serializable
@@ -56,8 +59,15 @@ sealed class Content {
 @Serializable
 data class ContentItem(
     val type: String,
-    val data: JsonElement?,
-    val text: String?
+    @SerialName("input_audio") val inputAudio: InputMedia? = null,
+    @SerialName("input_image") val inputImage: InputMedia? = null,
+    val text: String? = null
+)
+
+@Serializable
+data class InputMedia(
+    val format: String,
+    val data: String
 )
 
 object ContentSerializer : KSerializer<Content> {

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.utils.ModelConfig
+import io.kindbrave.mnnserver.utils.ModelUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
@@ -30,6 +31,10 @@ class ModelConfigViewModel @Inject constructor(): ViewModel() {
             _modelConfig.value = it
         }
         updateConfig()
+    }
+
+    fun isNeedShowThinkConfig(): Boolean {
+        return ModelUtils.isNeedConfigThinkMode(modelId)
     }
 
     private fun updateConfig() {
@@ -83,7 +88,7 @@ class ModelConfigViewModel @Inject constructor(): ViewModel() {
             nGramFactor = 1.02f,
             maxNewTokens = 2048,
             assistantPromptTemplate = null,
-            thinkingMode = true,
+            thinkingMode = false,
             mmap = false
         )
     }

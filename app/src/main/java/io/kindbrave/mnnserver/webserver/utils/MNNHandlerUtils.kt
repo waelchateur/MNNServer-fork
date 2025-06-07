@@ -3,13 +3,14 @@ package io.kindbrave.mnnserver.webserver.utils
 import android.content.Context
 import io.kindbrave.mnnserver.utils.FileUtils
 import io.kindbrave.mnnserver.webserver.request.Content
-import io.kindbrave.mnnserver.webserver.request.FunctionTool
 import io.kindbrave.mnnserver.webserver.request.Message
 import io.kindbrave.mnnserver.webserver.response.ChatChoice
 import io.kindbrave.mnnserver.webserver.response.ChatCompletionResponse
 import io.kindbrave.mnnserver.webserver.response.ChatMessage
-import io.kindbrave.mnnserver.webserver.response.FunctionCall
+import io.kindbrave.mnnserver.webserver.response.ToolCall
 import io.kindbrave.mnnserver.webserver.response.Usage
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Writer
@@ -33,6 +34,9 @@ object MNNHandlerUtils {
         val history = ArrayList<Pair<String, String>>()
 
         messages.forEach { message ->
+            // toolCalls结果不参与构建历史
+            if (message.toolCalls != null) return@forEach
+
             val role = message.role
             val content = message.content
 
@@ -44,12 +48,12 @@ object MNNHandlerUtils {
                         when (item.type) {
                             "text" -> sb.append(item.text)
                             "input_audio" -> {
-                                val audioData = item.data.toString()
+                                val audioData = item.inputAudio!!.data
                                 val audioCachePath = FileUtils.saveBase64WavToCache(context, audioData)
                                 sb.append("<audio>").append(audioCachePath).append("</audio>")
                             }
                             "input_image" -> {
-                                val imageData = item.data.toString()
+                                val imageData = item.inputImage!!.data
                                 val imgCachePath = FileUtils.saveBase64JpgToCache(context, imageData)
                                 sb.append("<img>").append(imgCachePath).append("</img>")
                             }
@@ -71,7 +75,7 @@ object MNNHandlerUtils {
         model: String,
         content: String,
         finishReason: String = "stop",
-        functionCall: List<FunctionCall>? = null,
+        toolCalls: List<ToolCall>? = null,
         promptTokens: Long?,
         completionTokens: Long?
     ): ChatCompletionResponse {
@@ -85,7 +89,7 @@ object MNNHandlerUtils {
                     message = ChatMessage(
                         role = "assistant",
                         content = content,
-                        functionCall = functionCall
+                        toolCalls = toolCalls
                     ),
                     finishReason = finishReason
                 )
@@ -116,11 +120,37 @@ fun Writer.writeChunk(messageId: String, createdTime: Long, modelId: String, pro
     flush()
 }
 
+fun Writer.writeToolCallsChunk(
+    messageId: String,
+    createdTime: Long,
+    modelId: String,
+    toolCalls: List<ToolCall>
+) {
+    val json = Json { encodeDefaults = true }
+    val toolCallsJsonStr = json.encodeToString(ListSerializer(ToolCall.serializer()), toolCalls)
+    val toolCallsJsonArray = JSONArray(toolCallsJsonStr)
+
+    val chunk = JSONObject()
+        .put("id", "chatcmpl-$messageId")
+        .put("object", "chat.completion.chunk")
+        .put("created", createdTime)
+        .put("model", modelId)
+        .put("choices", JSONArray().put(
+            JSONObject()
+               .put("index", 0)
+               .put("delta", JSONObject().put("tool_calls", toolCallsJsonArray))
+               .put("finish_reason", JSONObject.NULL)
+        ))
+    write("data: $chunk\n\n")
+    flush()
+}
+
 fun Writer.writeLastChunk(
     messageId: String,
     createdTime: Long,
     modelId: String,
-    metrics: HashMap<String, Any> = hashMapOf<String, Any>()
+    metrics: HashMap<String, Any> = hashMapOf<String, Any>(),
+    finishReason: String = "stop"
 ) {
     val promptLen = if (metrics.containsKey("prompt_len")) metrics["prompt_len"] as Long else 0L
     val decodeLen = if (metrics.containsKey("decode_len")) metrics["decode_len"] as Long else 0L
@@ -133,7 +163,7 @@ fun Writer.writeLastChunk(
             JSONObject()
                 .put("index", 0)
                 .put("delta", JSONObject())
-                .put("finish_reason", "stop")
+                .put("finish_reason", finishReason)
         ))
         .put("usage", JSONObject()
             .put("prompt_tokens", promptLen)
