@@ -10,17 +10,16 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.elvishew.xlog.XLog
 import dagger.hilt.android.AndroidEntryPoint
+import io.kindbrave.mnn.webserver.webserver.KtorServer
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.annotation.LogAfter
 import io.kindbrave.mnnserver.di.ApplicationScope
 import io.kindbrave.mnnserver.repository.SettingsRepository
-import io.kindbrave.mnnserver.webserver.KtorServer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -82,7 +81,7 @@ class WebServerService : Service() {
             runCatching {
                 val port = settingsRepository.getServerPort()
                 server.port = port
-                server.start()
+                server.start(settingsRepository.getExportWebPort())
                 _serverStatus.value = ServerStatus.Running
                 startForeground(NOTIFICATION_ID, createNotification(
                     getString(

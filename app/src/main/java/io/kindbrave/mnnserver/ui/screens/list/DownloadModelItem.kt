@@ -41,6 +41,7 @@ import com.alibaba.mls.api.ModelItem
 import com.alibaba.mnnllm.android.model.ModelUtils
 import io.kindbrave.mnnserver.R
 import io.kindbrave.mnnserver.utils.CustomModelUtils
+import io.kindbrave.mnnserver.utils.ModelIconUtils
 import kotlin.collections.get
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -49,7 +50,7 @@ fun DownloadModelItemView(model: ModelItem, loaded: Boolean, type: DownloadModel
     val viewModel: ModelListViewModel = hiltViewModel()
     val tags = remember(model) { model.getTags() }
     val modelName = remember(model) { model.modelName ?: "" }
-    val drawableId = remember(model) { ModelUtils.getDrawableId(modelName) }
+    val drawableId = remember(model) { ModelIconUtils.getDrawableId(modelName) }
 
     var showConfigDialog by remember { mutableStateOf(false) }
 

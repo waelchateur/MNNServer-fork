@@ -1,0 +1,26 @@
+package io.kindbrave.mnn.webserver.webserver.config
+
+import io.kindbrave.mnn.webserver.webserver.MNNHandler
+import io.kindbrave.mnn.webserver.webserver.route.audioRoutes
+import io.kindbrave.mnn.webserver.webserver.route.completionsRoutes
+import io.kindbrave.mnn.webserver.webserver.route.embeddingsRoutes
+import io.kindbrave.mnn.webserver.webserver.route.modelsRoutes
+import io.ktor.server.application.Application
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+
+fun Application.configureRouting(mnnHandler: MNNHandler) {
+    routing {
+        route("/v1") {
+            modelsRoutes(mnnHandler)
+            completionsRoutes(mnnHandler)
+            embeddingsRoutes(mnnHandler)
+        }
+        get("/") {
+            call.respondText("MNN Server is Running :)")
+        }
+        audioRoutes(mnnHandler)
+    }
+}

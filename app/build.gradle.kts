@@ -20,10 +20,6 @@ android {
         versionName = "0.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters.add("arm64-v8a")
-        }
     }
 
     buildTypes {
@@ -47,12 +43,6 @@ android {
         compose = true
         aidl = true
     }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
     packaging {
         resources.excludes.add("META-INF/INDEX.LIST")
         resources.excludes.add("META-INF/io.netty.versions.properties")
@@ -60,7 +50,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -72,6 +61,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+
+    implementation(project(":server"))
+    implementation(project(":webserver"))
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.ktor.server.core)

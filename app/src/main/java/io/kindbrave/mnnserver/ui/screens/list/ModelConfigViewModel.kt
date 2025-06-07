@@ -1,16 +1,20 @@
 package io.kindbrave.mnnserver.ui.screens.list
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.kindbrave.mnn.server.utils.ModelConfig
+import io.kindbrave.mnn.server.utils.ModelUtils
 import io.kindbrave.mnnserver.utils.FileUtils
-import io.kindbrave.mnnserver.utils.ModelConfig
-import io.kindbrave.mnnserver.utils.ModelUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class ModelConfigViewModel @Inject constructor(): ViewModel() {
+class ModelConfigViewModel @Inject constructor(
+    @ApplicationContext private val context: Context
+): ViewModel() {
 
     private val _modelConfig: MutableStateFlow<ModelConfig> = MutableStateFlow(DEFAULT_CONFIG)
     private var modelId = ""
@@ -21,7 +25,7 @@ class ModelConfigViewModel @Inject constructor(): ViewModel() {
 
     private fun getModelSettingsFile(modelId: String): String {
         this.modelId = modelId
-        return FileUtils.getModelConfigDir(modelId) + "/custom_config.json"
+        return FileUtils.getModelConfigDir(context, modelId) + "/custom_config.json"
     }
 
     fun initModelConfig(modelId: String, modelPath: String) {

@@ -11,11 +11,11 @@ import com.alibaba.mls.api.download.DownloadListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.repository.model.KindBraveMNNModelDownloadRepository
-import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
-import io.kindbrave.mnnserver.repository.model.MNNModelDownloadRepository
-import io.kindbrave.mnnserver.repository.model.MNNModelRepository
-import io.kindbrave.mnnserver.service.LLMService
+import io.kindbrave.mnn.webserver.repository.KindBraveMNNModelDownloadRepository
+import io.kindbrave.mnn.webserver.repository.UserUploadModelRepository
+import io.kindbrave.mnn.webserver.repository.MNNModelDownloadRepository
+import io.kindbrave.mnn.webserver.repository.MNNModelRepository
+import io.kindbrave.mnn.webserver.service.LLMService
 import io.kindbrave.mnnserver.utils.ModelNameUtils
 import io.kindbrave.mnnserver.utils.CustomModelUtils
 import kotlinx.coroutines.Dispatchers

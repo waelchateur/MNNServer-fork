@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import io.kindbrave.mnnserver.R
-import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository.ModelInfo
+import io.kindbrave.mnn.webserver.repository.UserUploadModelRepository.ModelInfo
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

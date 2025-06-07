@@ -22,9 +22,6 @@
 
 -keep class io.netty.** {*;}
 
-# mls.api
--keep class com.alibaba.mls.api.** {*;}
-
 # gson
 -keep class com.google.gson.reflect.TypeToken {*;}
 -keep class * extends com.google.gson.reflect.TypeToken
@@ -45,47 +42,16 @@
 
 -keep class io.kindbrave.mnnserver.ui.screens.list.** {*;}
 
--keep class io.kindbrave.mnnserver.engine.** {*;}
-
 -keep class kotlin.Pair { *; }
 
--keep class io.kindbrave.mnnserver.utils.ModelConfig {*;}
-
--dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
--dontwarn io.netty.internal.tcnative.AsyncTask
--dontwarn io.netty.internal.tcnative.Buffer
--dontwarn io.netty.internal.tcnative.CertificateCallback
--dontwarn io.netty.internal.tcnative.CertificateCompressionAlgo
--dontwarn io.netty.internal.tcnative.CertificateVerifier
--dontwarn io.netty.internal.tcnative.Library
--dontwarn io.netty.internal.tcnative.SSL
--dontwarn io.netty.internal.tcnative.SSLContext
--dontwarn io.netty.internal.tcnative.SSLPrivateKeyMethod
--dontwarn io.netty.internal.tcnative.SSLSessionCache
--dontwarn io.netty.internal.tcnative.SessionTicketKey
--dontwarn io.netty.internal.tcnative.SniHostNameMatcher
--dontwarn java.lang.management.ManagementFactory
--dontwarn java.lang.management.RuntimeMXBean
--dontwarn org.apache.log4j.Level
--dontwarn org.apache.log4j.Logger
--dontwarn org.apache.log4j.Priority
--dontwarn org.apache.logging.log4j.Level
--dontwarn org.apache.logging.log4j.LogManager
--dontwarn org.apache.logging.log4j.Logger
--dontwarn org.apache.logging.log4j.message.MessageFactory
--dontwarn org.apache.logging.log4j.spi.ExtendedLogger
--dontwarn org.apache.logging.log4j.spi.ExtendedLoggerWrapper
--dontwarn org.eclipse.jetty.npn.NextProtoNego$ClientProvider
--dontwarn org.eclipse.jetty.npn.NextProtoNego$Provider
--dontwarn org.eclipse.jetty.npn.NextProtoNego$ServerProvider
--dontwarn org.eclipse.jetty.npn.NextProtoNego
--dontwarn reactor.blockhound.integration.BlockHoundIntegration
 -dontwarn com.aayushatharva.brotli4j.Brotli4jLoader
 -dontwarn com.aayushatharva.brotli4j.decoder.DecoderJNI$Status
 -dontwarn com.aayushatharva.brotli4j.decoder.DecoderJNI$Wrapper
 -dontwarn com.aayushatharva.brotli4j.encoder.BrotliEncoderChannel
 -dontwarn com.aayushatharva.brotli4j.encoder.Encoder$Mode
 -dontwarn com.aayushatharva.brotli4j.encoder.Encoder$Parameters
+-dontwarn com.alibaba.mnnllm.android.model.ModelUtils
+-dontwarn com.alibaba.mnnllm.android.utils.FileUtils
 -dontwarn com.github.luben.zstd.Zstd
 -dontwarn com.github.luben.zstd.ZstdInputStreamNoFinalizer
 -dontwarn com.github.luben.zstd.util.Native
@@ -113,8 +79,25 @@
 -dontwarn com.oracle.svm.core.annotate.RecomputeFieldValue$Kind
 -dontwarn com.oracle.svm.core.annotate.RecomputeFieldValue
 -dontwarn com.oracle.svm.core.annotate.TargetClass
+-dontwarn io.kindbrave.mnn.server.utils.ModelConfig$Companion
+-dontwarn io.kindbrave.mnn.server.utils.ModelUtils
+-dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
+-dontwarn io.netty.internal.tcnative.AsyncTask
+-dontwarn io.netty.internal.tcnative.Buffer
+-dontwarn io.netty.internal.tcnative.CertificateCallback
+-dontwarn io.netty.internal.tcnative.CertificateCompressionAlgo
+-dontwarn io.netty.internal.tcnative.CertificateVerifier
+-dontwarn io.netty.internal.tcnative.Library
 -dontwarn io.netty.internal.tcnative.ResultCallback
+-dontwarn io.netty.internal.tcnative.SSL
+-dontwarn io.netty.internal.tcnative.SSLContext
+-dontwarn io.netty.internal.tcnative.SSLPrivateKeyMethod
 -dontwarn io.netty.internal.tcnative.SSLSession
+-dontwarn io.netty.internal.tcnative.SSLSessionCache
+-dontwarn io.netty.internal.tcnative.SessionTicketKey
+-dontwarn io.netty.internal.tcnative.SniHostNameMatcher
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn java.lang.management.RuntimeMXBean
 -dontwarn lzma.sdk.ICodeProgress
 -dontwarn lzma.sdk.lzma.Encoder
 -dontwarn net.jpountz.lz4.LZ4Compressor
@@ -123,6 +106,19 @@
 -dontwarn net.jpountz.lz4.LZ4FastDecompressor
 -dontwarn net.jpountz.xxhash.XXHash32
 -dontwarn net.jpountz.xxhash.XXHashFactory
+-dontwarn org.apache.log4j.Level
+-dontwarn org.apache.log4j.Logger
+-dontwarn org.apache.log4j.Priority
+-dontwarn org.apache.logging.log4j.Level
+-dontwarn org.apache.logging.log4j.LogManager
+-dontwarn org.apache.logging.log4j.Logger
+-dontwarn org.apache.logging.log4j.message.MessageFactory
+-dontwarn org.apache.logging.log4j.spi.ExtendedLogger
+-dontwarn org.apache.logging.log4j.spi.ExtendedLoggerWrapper
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$ClientProvider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$Provider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$ServerProvider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego
 -dontwarn org.jboss.marshalling.ByteInput
 -dontwarn org.jboss.marshalling.ByteOutput
 -dontwarn org.jboss.marshalling.Marshaller
@@ -131,6 +127,7 @@
 -dontwarn org.jboss.marshalling.Unmarshaller
 -dontwarn org.osgi.annotation.bundle.Export
 -dontwarn reactor.blockhound.BlockHound$Builder
+-dontwarn reactor.blockhound.integration.BlockHoundIntegration
 -dontwarn sun.security.x509.AlgorithmId
 -dontwarn sun.security.x509.CertificateAlgorithmId
 -dontwarn sun.security.x509.CertificateSerialNumber

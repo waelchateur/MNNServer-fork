@@ -1,7 +1,6 @@
 package io.kindbrave.mnnserver.ui.screens.main
 
 import android.app.ActivityManager
-import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -10,15 +9,14 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.StatFs
 import android.provider.Settings
-import androidx.lifecycle.AndroidViewModel
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elvishew.xlog.XLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.kindbrave.mnnserver.data.LogRepository
-import io.kindbrave.mnnserver.repository.model.UserUploadModelRepository
+import io.kindbrave.mnn.webserver.service.LLMService
 import io.kindbrave.mnnserver.repository.SettingsRepository
-import io.kindbrave.mnnserver.service.LLMService
 import io.kindbrave.mnnserver.service.WebServerService
 import io.kindbrave.mnnserver.utils.ServiceUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,10 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.core.net.toUri
-import com.elvishew.xlog.XLog
-import io.kindbrave.mnnserver.engine.AsrSession
-import io.kindbrave.mnnserver.engine.MNNAsr
 
 @HiltViewModel
 class MainViewModel @Inject constructor(

@@ -1,3 +1,9 @@
+import org.gradle.kotlin.dsl.dir
+import org.gradle.kotlin.dsl.flatDir
+
+include(":webserver")
+
+
 pluginManagement {
     repositories {
         google {
@@ -21,4 +27,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MNN Server"
 include(":app")
- 
+include(":server")
+include(":webserver")
