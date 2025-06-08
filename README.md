@@ -39,4 +39,4 @@ We would like to express our gratitude to the following projects:
 
 # License
 
-This project is open-source and licensed under the GPL-3 License.
+[LICENSE](./LICENSE)

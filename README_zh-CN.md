@@ -37,4 +37,5 @@ MNN Server是一个Android第三方MNN服务端，其可以为外部程序提供
 - **[mnn-asr](https://github.com/wangzhaode/mnn-asr)**
 
 # 许可证
-本项目开源，遵循GPL-3 License。
+
+[LICENSE](./LICENSE)
