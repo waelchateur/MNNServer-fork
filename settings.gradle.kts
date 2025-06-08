@@ -1,6 +1,9 @@
 import org.gradle.kotlin.dsl.dir
 import org.gradle.kotlin.dsl.flatDir
 
+include(":mnnui")
+
+
 include(":webserver")
 
 
@@ -29,3 +32,4 @@ rootProject.name = "MNN Server"
 include(":app")
 include(":server")
 include(":webserver")
+include(":mnnui")

@@ -2,10 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.android.aop)
-    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -41,7 +39,6 @@ android {
     }
     buildFeatures {
         compose = true
-        aidl = true
     }
     packaging {
         resources.excludes.add("META-INF/INDEX.LIST")
@@ -62,33 +59,14 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(project(":mnnui"))
     implementation(project(":server"))
-    implementation(project(":webserver"))
-
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.cors)
-    implementation(libs.ktor.server.auth)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.status.pages)
-    implementation(libs.ktor.server.websockets)
-
-    implementation(libs.google.gson)
-    implementation(libs.retrofit2)
-    implementation(libs.retrofit2.converter.gson)
-    implementation(libs.okhttp3)
-    implementation(libs.okhttp3.logging)
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)
 
     implementation(libs.xlog)
-
-    implementation(libs.android.aop.core)
-    ksp(libs.android.aop.ksp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

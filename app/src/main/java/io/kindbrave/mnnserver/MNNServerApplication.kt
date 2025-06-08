@@ -4,7 +4,6 @@ import android.app.Application
 import com.alibaba.mls.api.ApplicationProvider
 import com.elvishew.xlog.LogConfiguration
 import com.elvishew.xlog.XLog
-import com.elvishew.xlog.flattener.DefaultFlattener
 import com.elvishew.xlog.flattener.PatternFlattener
 import com.elvishew.xlog.printer.AndroidPrinter
 import com.elvishew.xlog.printer.file.FilePrinter

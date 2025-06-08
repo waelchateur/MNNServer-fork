@@ -30,18 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <service
-            android:name=".service.WebServerService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"/>
-
-        <service
-            android:name=".service.AistService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="specialUse" />
     </application>
 
 </manifest>

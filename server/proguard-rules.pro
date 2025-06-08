@@ -47,4 +47,6 @@
 
 -keep class io.kindbrave.mnn.server.utils.ModelConfig {*;}
 
+-keep class io.kindbrave.mnn.server.MNN {*;}
+
 -dontwarn java.lang.invoke.StringConcatFactory
