@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.androidx.compose.material.icons.extended)
+
     implementation(project(":server"))
     implementation(project(":webserver"))
 
@@ -80,7 +82,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "io.kindbrave"
             artifactId = "mnn.ui"
-            version = "0.0.4"
+            version = "0.0.4.1"
 
             afterEvaluate {
                 from(components["release"])

@@ -12,13 +12,17 @@ import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alibaba.mls.api.ModelItem
 import com.elvishew.xlog.XLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.kindbrave.mnn.webserver.repository.MNNModelRepository
 import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnnserver.repository.ConfigRepository
 import io.kindbrave.mnnserver.repository.SettingsRepository
 import io.kindbrave.mnnserver.service.WebServerService
 import io.kindbrave.mnnserver.utils.ServiceUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,25 +32,25 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val llmService: LLMService
+    private val llmService: LLMService,
+    private val settingsRepository: SettingsRepository,
+    private val configRepository: ConfigRepository,
+    private val mnnModelRepository: MNNModelRepository
 ) : ViewModel() {
 
     private val tag = MainViewModel::class.java.simpleName
-    private val settingsRepository = SettingsRepository(context)
 
     private val intent = Intent(context, WebServerService::class.java)
 
     private val _serverStatus =
-        MutableStateFlow<WebServerService.ServerStatus>(WebServerService.ServerStatus.Stopped)
-    val serverStatus: StateFlow<WebServerService.ServerStatus> = _serverStatus.asStateFlow()
+        MutableStateFlow<ServerStatus>(ServerStatus.Stopped)
+    val serverStatus: StateFlow<ServerStatus> = _serverStatus.asStateFlow()
 
     private val _serverPort = MutableStateFlow(8080)
     val serverPort: StateFlow<Int> = _serverPort.asStateFlow()
 
-    private val _isServiceRunning = MutableStateFlow(false)
-
-    private val _loadedModelsCount = MutableStateFlow(0)
-    val loadedModelsCount: StateFlow<Int> = _loadedModelsCount.asStateFlow()
+    private val _loadedModels = MutableStateFlow<List<ModelItem>>(emptyList())
+    val loadedModels: StateFlow<List<ModelItem>> = _loadedModels.asStateFlow()
 
     private val _deviceInfo = MutableStateFlow(DeviceInfo(0, 0, 0, 0))
     val deviceInfo: StateFlow<DeviceInfo> = _deviceInfo.asStateFlow()
@@ -59,23 +63,25 @@ class MainViewModel @Inject constructor(
 
             viewModelScope.launch {
                 webServerService?.serverStatus?.collect { status ->
-                    _serverStatus.value = status
-                    _isServiceRunning.value = status is WebServerService.ServerStatus.Running
+                    when (status) {
+                        is WebServerService.ServerStatus.Error -> _serverStatus.value = ServerStatus.Error(status.message)
+                        WebServerService.ServerStatus.Stopped -> _serverStatus.value = ServerStatus.Stopped
+                        else -> Unit
+                    }
                 }
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             webServerService = null
-            _serverStatus.value = WebServerService.ServerStatus.Stopped
-            _isServiceRunning.value = false
+            _serverStatus.value = ServerStatus.Stopped
         }
     }
 
     init {
         viewModelScope.launch {
             llmService.loadedModelsState.collect { models ->
-                _loadedModelsCount.value = models.size
+                _loadedModels.value = models.values.toList()
             }
             _serverPort.emit(settingsRepository.getServerPort())
         }
@@ -110,10 +116,12 @@ class MainViewModel @Inject constructor(
     }
 
     fun startServer() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            _serverStatus.emit(ServerStatus.Starting)
             _serverPort.emit(settingsRepository.getServerPort())
             context.startService(intent)
-            _serverStatus.emit(WebServerService.ServerStatus.Running)
+            startLastRunningModels()
+            _serverStatus.emit(ServerStatus.Running)
         }
     }
 
@@ -121,7 +129,20 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             webServerService?.stopServer()
             context.stopService(intent)
-            _serverStatus.emit(WebServerService.ServerStatus.Stopped)
+            _serverStatus.emit(ServerStatus.Stopped)
+        }
+    }
+
+    private suspend fun startLastRunningModels() {
+        if (settingsRepository.getStartLastRunningModels()) {
+            val lastRunningModels = configRepository.getLastRunningModels()
+            lastRunningModels.forEach { model ->
+                runCatching {
+                    mnnModelRepository.loadModel(model)
+                }.onFailure { e ->
+                    XLog.tag(tag).e("startLastRunningModels:onFailure:${e.message}", e)
+                }
+            }
         }
     }
 
@@ -129,11 +150,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val isRunning = ServiceUtils.isServiceRunning(context, WebServerService::class.java)
             if (isRunning) {
-                _serverStatus.emit(WebServerService.ServerStatus.Running)
-                _isServiceRunning.emit(true)
+                _serverStatus.emit(ServerStatus.Running)
             } else {
-                _serverStatus.emit(WebServerService.ServerStatus.Stopped)
-                _isServiceRunning.emit(false)
+                _serverStatus.emit(ServerStatus.Stopped)
             }
         }
     }
@@ -170,4 +189,11 @@ class MainViewModel @Inject constructor(
         super.onCleared()
         unbindService()
     }
+}
+
+sealed class ServerStatus {
+    object Stopped : ServerStatus()
+    object Starting : ServerStatus()
+    object Running : ServerStatus()
+    data class Error(val message: String) : ServerStatus()
 }

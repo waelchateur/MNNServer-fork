@@ -18,10 +18,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _exportWebPort = MutableStateFlow(false)
     val exportWebPort: StateFlow<Boolean> = _exportWebPort.asStateFlow()
 
+    private val _startLastRunningModels = MutableStateFlow(false)
+    val startLastRunningModels: StateFlow<Boolean> = _startLastRunningModels.asStateFlow()
+
     init {
         viewModelScope.launch {
             _serverPort.emit(settingsRepository.getServerPort())
             _exportWebPort.emit(settingsRepository.getExportWebPort())
+            _startLastRunningModels.emit(settingsRepository.getStartLastRunningModels())
         }
     }
 
@@ -42,6 +46,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settingsRepository.setExportWebPort(enable)
             _exportWebPort.emit(enable)
+        }
+    }
+
+    fun setStartLastRunningModels(enable: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setStartLastRunningModels(enable)
+            _startLastRunningModels.emit(enable)
         }
     }
 }

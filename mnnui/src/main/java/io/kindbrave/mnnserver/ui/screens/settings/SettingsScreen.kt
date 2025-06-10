@@ -6,8 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.ListAlt
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +44,7 @@ fun SettingsScreen(
 ) {
     val serverPort by viewModel.serverPort.collectAsState()
     val exportWebPort by viewModel.exportWebPort.collectAsState()
+    val startLastRunningModels by viewModel.startLastRunningModels.collectAsState()
     var showPortSettingsDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     
@@ -54,70 +60,88 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
+                .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.port_settings)) },
-                supportingContent = { Text("$serverPort") },
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.web),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { showPortSettingsDialog = true }
-            )
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.port_settings)) },
+                    supportingContent = { Text("$serverPort") },
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.web),
+                        contentDescription = null
+                    ) },
+                    modifier = Modifier.clickable { showPortSettingsDialog = true }
+                )
 
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.export_web_port)) },
-                supportingContent = { Text(stringResource(R.string.export_web_port_description))},
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.export),
-                    contentDescription = null
-                ) },
-                trailingContent = {
-                    Switch(
-                        checked = exportWebPort,
-                        onCheckedChange = { viewModel.setExportWebPort(it) }
-                    )
-                },
-                modifier = Modifier.clickable { viewModel.setExportWebPort(exportWebPort.not()) }
-            )
-            
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.model_list)) },
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.list),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { navController.navigate("model_list") }
-            )
-            
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.service_logs)) },
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.log),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { navController.navigate("settings/logs") }
-            )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.export_web_port)) },
+                    supportingContent = { Text(stringResource(R.string.export_web_port_description))},
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = null
+                    ) },
+                    trailingContent = {
+                        Switch(
+                            checked = exportWebPort,
+                            onCheckedChange = { viewModel.setExportWebPort(it) }
+                        )
+                    },
+                    modifier = Modifier.clickable { viewModel.setExportWebPort(exportWebPort.not()) }
+                )
 
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.about)) },
-                leadingContent = { Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(R.drawable.about),
-                    contentDescription = null
-                ) },
-                modifier = Modifier.clickable { showAboutDialog = true }
-            )
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.start_last_running_models)) },
+                    supportingContent = { Text(stringResource(R.string.start_last_running_models_description))},
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = Icons.Outlined.AccountTree,
+                        contentDescription = null
+                    ) },
+                    trailingContent = {
+                        Switch(
+                            checked = startLastRunningModels,
+                            onCheckedChange = { viewModel.setStartLastRunningModels(it) }
+                        )
+                    },
+                    modifier = Modifier.clickable { viewModel.setStartLastRunningModels(startLastRunningModels.not()) }
+                )
+
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.model_list)) },
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = Icons.AutoMirrored.Outlined.ListAlt,
+                        contentDescription = null
+                    ) },
+                    modifier = Modifier.clickable { navController.navigate("model_list") }
+                )
+
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.service_logs)) },
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.log),
+                        contentDescription = null
+                    ) },
+                    modifier = Modifier.clickable { navController.navigate("settings/logs") }
+                )
+
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.about)) },
+                    leadingContent = { Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.about),
+                        contentDescription = null
+                    ) },
+                    modifier = Modifier.clickable { showAboutDialog = true }
+                )
+            }
         }
         
         if (showPortSettingsDialog) {

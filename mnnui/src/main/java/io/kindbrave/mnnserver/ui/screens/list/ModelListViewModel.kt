@@ -16,6 +16,7 @@ import io.kindbrave.mnn.webserver.repository.UserUploadModelRepository
 import io.kindbrave.mnn.webserver.repository.MNNModelDownloadRepository
 import io.kindbrave.mnn.webserver.repository.MNNModelRepository
 import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnnserver.repository.ConfigRepository
 import io.kindbrave.mnnserver.utils.ModelNameUtils
 import io.kindbrave.mnnserver.utils.CustomModelUtils
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,7 @@ class ModelListViewModel @Inject constructor(
     private val mnnModelDownloadRepository: MNNModelDownloadRepository,
     private val kindBraveMNNModelDownloadRepository: KindBraveMNNModelDownloadRepository,
     private val userUploadModelRepository: UserUploadModelRepository,
+    private val configRepository: ConfigRepository,
     private val llmService: LLMService,
     @ApplicationContext private val context: Context
 ) : ViewModel(), DownloadListener {
@@ -53,7 +55,7 @@ class ModelListViewModel @Inject constructor(
 
     private var lastDownloadTime = 0L
 
-    val loadedModels: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
+    val loadedModels: MutableStateFlow<Map<String, ModelItem>> = MutableStateFlow(emptyMap())
 
     init {
         getDownloadModels()
@@ -66,8 +68,10 @@ class ModelListViewModel @Inject constructor(
 
     private fun collectLoadedChatSessions() {
         viewModelScope.launch {
-            llmService.loadedModelsState.collect { chatSessionMap ->
-                loadedModels.emit(chatSessionMap)
+            llmService.loadedModelsState.collect { loadedModelMap ->
+                loadedModels.emit(loadedModelMap)
+                // 加载模型更新后存储到配置文件
+                configRepository.setLastRunningModels(loadedModelMap)
             }
         }
     }
@@ -271,6 +275,7 @@ class ModelListViewModel @Inject constructor(
             runCatching {
                 userUploadModelRepository.loadModel(model)
                 _loadingState.emit(LoadingState.Idle)
+                configRepository.setLastRunningModels(loadedModels.value)
             }.onFailure { e ->
                 _loadingState.emit(LoadingState.Error(e.message.toString()))
             }

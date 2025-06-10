@@ -62,4 +62,9 @@
     <string name="backend_type">backend</string>
     <string name="asr">ASR</string>
     <string name="custom_model">Custom Models</string>
+    <string name="empty_running_model">No running model available</string>
+    <string name="running_models_info">Running Models</string>
+    <string name="start_last_running_models">Start Last Running Models</string>
+    <string name="start_last_running_models_description">When starting the service, also start the model from the last run</string>
+    <string name="server_starting">Server Starting</string>
 </resources>

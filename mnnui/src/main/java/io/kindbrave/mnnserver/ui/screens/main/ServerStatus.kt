@@ -28,7 +28,7 @@ import io.kindbrave.mnnserver.service.WebServerService
 
 @Composable
 fun ServerStatusCard(
-    serverStatus: WebServerService.ServerStatus,
+    serverStatus: ServerStatus,
     port: Int,
     loadedModelsCount: Int,
     onStartServer: () -> Unit,
@@ -50,21 +50,23 @@ fun ServerStatusCard(
             Text(
                 text = stringResource(R.string.server_status),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             val statusText = when (serverStatus) {
-                is WebServerService.ServerStatus.Running -> stringResource(R.string.server_running, port)
-                is WebServerService.ServerStatus.Stopped -> stringResource(R.string.server_stopped)
-                is WebServerService.ServerStatus.Error -> stringResource(R.string.server_error, serverStatus.message)
+                is ServerStatus.Running -> stringResource(R.string.server_running, port)
+                is ServerStatus.Starting -> stringResource(R.string.server_starting)
+                is ServerStatus.Stopped -> stringResource(R.string.server_stopped)
+                is ServerStatus.Error -> stringResource(R.string.server_error, serverStatus.message)
             }
 
             val statusColor = when (serverStatus) {
-                is WebServerService.ServerStatus.Running -> MaterialTheme.colorScheme.primary
-                is WebServerService.ServerStatus.Stopped -> MaterialTheme.colorScheme.error
-                is WebServerService.ServerStatus.Error -> MaterialTheme.colorScheme.error
+                is ServerStatus.Running -> MaterialTheme.colorScheme.primary
+                is ServerStatus.Starting -> MaterialTheme.colorScheme.primary
+                is ServerStatus.Stopped -> MaterialTheme.colorScheme.error
+                is ServerStatus.Error -> MaterialTheme.colorScheme.error
             }
 
             Row(
@@ -88,7 +90,7 @@ fun ServerStatusCard(
                 )
             }
 
-            if (serverStatus is WebServerService.ServerStatus.Running) {
+            if (serverStatus is ServerStatus.Running) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.running_models, loadedModelsCount),
@@ -105,14 +107,14 @@ fun ServerStatusCard(
             ) {
                 Button(
                     onClick = onStartServer,
-                    enabled = serverStatus !is WebServerService.ServerStatus.Running
+                    enabled = serverStatus !is ServerStatus.Running && serverStatus!is ServerStatus.Starting
                 ) {
                     Text(stringResource(R.string.start_server))
                 }
 
                 OutlinedButton(
                     onClick = onStopServer,
-                    enabled = serverStatus is WebServerService.ServerStatus.Running
+                    enabled = serverStatus is ServerStatus.Running
                 ) {
                     Text(stringResource(R.string.stop_server))
                 }

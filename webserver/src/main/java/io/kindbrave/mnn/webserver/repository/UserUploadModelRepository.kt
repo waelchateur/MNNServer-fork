@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
+import com.alibaba.mls.api.ModelItem
 import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnn.webserver.annotation.LogAfter
@@ -54,7 +55,11 @@ class UserUploadModelRepository @Inject constructor(
         llmService.createChatSession(
             modelId = model.id,
             modelDir = model.path,
-            sessionId = model.id
+            sessionId = model.id,
+            modelItem = ModelItem().apply {
+                modelId = model.id
+                addTag("chat")
+            }
         )
     }
 

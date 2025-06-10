@@ -62,4 +62,9 @@
     <string name="backend_type">backend</string>
     <string name="asr">语音识别|ASR</string>
     <string name="custom_model">第三方模型</string>
+    <string name="empty_running_model">暂无运行模型</string>
+    <string name="running_models_info">正在运行的模型</string>
+    <string name="start_last_running_models">启动上次运行的模型</string>
+    <string name="start_last_running_models_description">启动服务时，同时启动上次运行的模型</string>
+    <string name="server_starting">服务启动中</string>
 </resources> 

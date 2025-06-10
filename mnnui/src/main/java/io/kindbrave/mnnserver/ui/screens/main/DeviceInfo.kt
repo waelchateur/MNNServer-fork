@@ -37,7 +37,7 @@ fun DeviceInfoCard(deviceInfo: DeviceInfo) {
             Text(
                 text = stringResource(R.string.device_info),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))

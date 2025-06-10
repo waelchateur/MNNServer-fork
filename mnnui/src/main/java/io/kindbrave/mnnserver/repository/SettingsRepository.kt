@@ -21,6 +21,7 @@ class SettingsRepository @Inject constructor(
         private val DIFFUSION_MEMORY_MODE_KEY = stringPreferencesKey("diffusion_memory_mode")
         private val DOWNLOAD_PROVIDER_KEY = stringPreferencesKey("download_provider")
         private val EXPORT_WEB_PORT = booleanPreferencesKey("export_web_port")
+        private val START_LAST_RUNNING_MODELS = booleanPreferencesKey("start_last_running_models")
         private const val DEFAULT_SERVER_PORT = 8080
     }
 
@@ -62,5 +63,15 @@ class SettingsRepository @Inject constructor(
 
     suspend fun getExportWebPort() = context.dataStore.data.map { preferences ->
         preferences[EXPORT_WEB_PORT] == true
+        }.first()
+
+    suspend fun setStartLastRunningModels(enable: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[START_LAST_RUNNING_MODELS] = enable
+        }
+    }
+
+    suspend fun getStartLastRunningModels() = context.dataStore.data.map { preferences ->
+        preferences[START_LAST_RUNNING_MODELS] == true
         }.first()
 }

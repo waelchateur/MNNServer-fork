@@ -24,19 +24,22 @@ class MNNModelRepository @Inject constructor(
             llmService.createEmbeddingSession(
                 modelId = model.modelId!!,
                 modelDir = modelPath,
-                sessionId = model.modelId!!
+                sessionId = model.modelId!!,
+                modelItem = model
             )
         } else if (model.getTags().contains("asr")) {
             llmService.createAsrSession(
                 modelId = model.modelId!!,
                 modelDir = modelPath,
-                sessionId = model.modelId!!
+                sessionId = model.modelId!!,
+                modelItem = model
             )
         } else {
             llmService.createChatSession(
                 modelId = model.modelId!!,
                 modelDir = modelPath,
-                sessionId = model.modelId!!
+                sessionId = model.modelId!!,
+                modelItem = model
             )
         }
     }
