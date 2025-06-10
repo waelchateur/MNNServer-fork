@@ -78,17 +78,17 @@ class WebServerService : Service() {
     @LogAfter("")
     private fun startServer() {
         scope.launch(Dispatchers.IO) {
-            runCatching {
-                val port = settingsRepository.getServerPort()
-                server.port = port
-                server.start(settingsRepository.getExportWebPort())
+            val port = settingsRepository.getServerPort()
+            server.port = port
+            val res = server.start(settingsRepository.getExportWebPort())
+            res.onSuccess {
                 _serverStatus.value = ServerStatus.Running
                 startForeground(NOTIFICATION_ID, createNotification(
                     getString(
                         R.string.server_running_notification,
                         port.toString()
                     )))
-            }.onFailure { e ->
+            }.onFailure { e->
                 _serverStatus.value = ServerStatus.Error("Error: ${e.message}")
                 XLog.tag(tag).e("startServer=>error ${e.message}")
             }

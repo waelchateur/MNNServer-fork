@@ -9,6 +9,7 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.StatFs
 import android.provider.Settings
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -103,7 +104,7 @@ class MainViewModel @Inject constructor(
         return powerManager.isIgnoringBatteryOptimizations(context.packageName)
     }
 
-   fun requestIgnoreBatteryOptimizations() {
+    fun requestIgnoreBatteryOptimizations() {
        runCatching {
            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                data = "package:${context.packageName}".toUri()
