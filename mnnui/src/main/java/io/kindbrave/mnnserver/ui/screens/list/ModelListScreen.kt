@@ -204,14 +204,15 @@ fun ModelListScreen(navController: NavHostController) {
         else -> {}
     }
     val getCustomDownloadModelState by viewModel.getCustomDownloadModelState.collectAsState()
-    when (getCustomDownloadModelState) {
-        is GetDownloadModelState.Error -> {
-            LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {
+        when (getCustomDownloadModelState) {
+            is GetDownloadModelState.Error -> {
                 snackbarHostState.showSnackbar((getDownloadModelState as GetDownloadModelState.Error).message)
             }
+            else -> {}
         }
-        else -> {}
     }
+
 
     val loadingState by viewModel.loadingState.collectAsState()
     when (loadingState) {
