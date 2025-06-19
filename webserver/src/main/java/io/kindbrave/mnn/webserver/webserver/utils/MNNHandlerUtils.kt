@@ -1,6 +1,7 @@
 package io.kindbrave.mnn.webserver.webserver.utils
 
 import android.content.Context
+import io.kindbrave.mnn.server.engine.ChatSession
 import io.kindbrave.mnn.server.utils.FileUtils
 import io.kindbrave.mnn.webserver.webserver.request.Content
 import io.kindbrave.mnn.webserver.webserver.request.Message
@@ -30,12 +31,17 @@ object MNNHandlerUtils {
         return matches?.value
     }
 
-    fun buildChatHistory(messages: List<Message>, context: Context): ArrayList<Pair<String, String>> {
+    fun buildChatHistory(messages: List<Message>, context: Context, chatSession: ChatSession? = null): ArrayList<Pair<String, String>> {
         val history = ArrayList<Pair<String, String>>()
 
         messages.forEach { message ->
             // toolCalls结果不参与构建历史
             if (message.toolCalls != null) return@forEach
+
+            if (message.role == "system") {
+                chatSession?.updateSystemPrompt(message.content.toString())
+                return@forEach
+            }
 
             val role = message.role
             val content = message.content

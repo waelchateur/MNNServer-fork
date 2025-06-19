@@ -63,10 +63,10 @@ class MainViewModel @Inject constructor(
             webServerService = binder.getService()
 
             viewModelScope.launch {
-                webServerService?.serverStatus?.collect { status ->
+                WebServerService.serverStatus.collect { status ->
                     when (status) {
                         is WebServerService.ServerStatus.Error -> _serverStatus.value = ServerStatus.Error(status.message)
-                        WebServerService.ServerStatus.Stopped -> _serverStatus.value = ServerStatus.Stopped
+                        // WebServerService.ServerStatus.Stopped -> _serverStatus.value = ServerStatus.Stopped
                         else -> Unit
                     }
                 }
@@ -86,8 +86,8 @@ class MainViewModel @Inject constructor(
             }
             _serverPort.emit(settingsRepository.getServerPort())
         }
-        bindService()
         checkServiceStatus()
+        bindService()
         updateSystemInfo()
     }
 
@@ -151,9 +151,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val isRunning = ServiceUtils.isServiceRunning(context, WebServerService::class.java)
             if (isRunning) {
-                _serverStatus.emit(ServerStatus.Running)
+                _serverStatus.value = ServerStatus.Running
             } else {
-                _serverStatus.emit(ServerStatus.Stopped)
+                _serverStatus.value = ServerStatus.Stopped
             }
         }
     }

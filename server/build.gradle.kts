@@ -66,7 +66,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "io.kindbrave"
             artifactId = "mnn.server"
-            version = "0.0.4.1"
+            version = "0.0.4.3"
 
             afterEvaluate {
                 from(components["release"])

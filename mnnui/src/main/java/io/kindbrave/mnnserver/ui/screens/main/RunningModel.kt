@@ -41,7 +41,7 @@ fun RunningModel(models: List<ModelItem>) {
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = stringResource(R.string.running_models_info),
                 style = MaterialTheme.typography.titleMedium,

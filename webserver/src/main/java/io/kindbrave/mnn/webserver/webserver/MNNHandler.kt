@@ -140,7 +140,7 @@ class MNNHandler @Inject constructor(
             updateAssistantSystemPrompt(chatSession)
         }
 
-        val history = MNNHandlerUtils.buildChatHistory(messages, context)
+        val history = MNNHandlerUtils.buildChatHistory(messages, context, chatSession)
         val generateResponse = StringBuilder()
         val metrics = chatSession.generate(history, object : MNNLlm.GenerateProgressListener {
             override fun onProgress(progress: String?): Boolean {
@@ -198,7 +198,7 @@ class MNNHandler @Inject constructor(
             updateAssistantSystemPrompt(chatSession)
         }
 
-        val history = MNNHandlerUtils.buildChatHistory(messages, context)
+        val history = MNNHandlerUtils.buildChatHistory(messages, context, chatSession)
         // 首先发送空白内容防止回复过慢客户端断开连接
         writer.writeChunk(messageId, createdTime, modelId, "")
 

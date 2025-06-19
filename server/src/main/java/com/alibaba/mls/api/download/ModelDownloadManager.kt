@@ -227,19 +227,23 @@ class ModelDownloadManager private constructor(private val context: Context) {
     private fun onDownloadTaskAdded(count: Int) {
         if (count == 1) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                if (ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    )
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        context as Activity,
-                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                        REQUEST_CODE_POST_NOTIFICATIONS
-                    )
-                } else {
-                    startForegroundService()
+                runCatching {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        )
+                        != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            context as Activity,
+                            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                            REQUEST_CODE_POST_NOTIFICATIONS
+                        )
+                    } else {
+                        startForegroundService()
+                    }
+                }.onFailure { e ->
+                    Log.e(TAG, "onDownloadTaskAdded: ", e)
                 }
             }
         }

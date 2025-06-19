@@ -36,8 +36,10 @@ class WebServerService : Service() {
 
     private val binder = LocalBinder()
     
-    private val _serverStatus = MutableStateFlow<ServerStatus>(ServerStatus.Stopped)
-    val serverStatus: StateFlow<ServerStatus> = _serverStatus
+    companion object {
+        private val _serverStatus = MutableStateFlow<ServerStatus>(ServerStatus.Stopped)
+        val serverStatus: StateFlow<ServerStatus> = _serverStatus
+    }
     
     inner class LocalBinder : Binder() {
         fun getService(): WebServerService = this@WebServerService
