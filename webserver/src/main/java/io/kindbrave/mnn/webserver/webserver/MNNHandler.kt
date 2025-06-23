@@ -5,6 +5,7 @@ import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnn.server.engine.AsrSession
 import io.kindbrave.mnn.server.engine.ChatSession
+import io.kindbrave.mnn.server.engine.EmbeddingSession
 import io.kindbrave.mnn.server.engine.MNNAsr
 import io.kindbrave.mnn.server.engine.MNNLlm
 import io.kindbrave.mnn.webserver.service.LLMService
@@ -101,26 +102,14 @@ class MNNHandler @Inject constructor(
         }
 
         val embeddingSession = llmService.getEmbeddingSession(modelId)
-        if (embeddingSession == null) {
-            throw InvalidParameterException("embeddingSession is null")
+        if (embeddingSession != null) {
+            return try {
+                embeddingByEmbeddingModel(input, modelId, embeddingSession)
+            } catch (e: Exception) {
+                throw InvalidParameterException("embedding error:$e")
+            }
         }
-
-        runCatching {
-            val embedding = embeddingSession.embedding(input.getString(0))
-            val result = JSONObject()
-                .put("object", "list")
-                .put("data", JSONArray().put(
-                    JSONObject()
-                        .put("object", "embedding")
-                        .put("embedding", JSONArray(embedding))
-                        .put("index", 0)
-                ))
-                .put("model", modelId)
-            return result
-        }.onFailure { e ->
-            XLog.tag(tag).e("embeddings:onFailure:$e")
-        }
-        throw Exception("embedding error")
+        throw InvalidParameterException("embeddingSession is null")
     }
 
     private fun chatSessionGenerate(
@@ -226,23 +215,31 @@ class MNNHandler @Inject constructor(
         } else null
 
         if (toolCalls != null) {
-            writer.writeToolCallsChunk(
-                messageId,
-                createdTime,
-                modelId,
-                toolCalls
-            )
-            writer.writeLastChunk(
-                messageId,
-                createdTime,
-                modelId,
-                finishReason = "tool_calls",
-                metrics = metrics
-            )
-            XLog.tag(tag).d("chatSessionStreamingGenerate tool call modelId:$modelId done")
+            runCatching {
+                writer.writeToolCallsChunk(
+                    messageId,
+                    createdTime,
+                    modelId,
+                    toolCalls
+                )
+                writer.writeLastChunk(
+                    messageId,
+                    createdTime,
+                    modelId,
+                    finishReason = "tool_calls",
+                    metrics = metrics
+                )
+                XLog.tag(tag).d("chatSessionStreamingGenerate tool call modelId:$modelId done")
+            }.onFailure {
+                XLog.tag(tag).e("chatSessionStreamingGenerate tool call modelId:$modelId onFailure:$it")
+            }
         } else {
-            writer.writeLastChunk(messageId, createdTime, modelId, metrics)
-            XLog.tag(tag).d("chatSessionStreamingGenerate modelId:$modelId done")
+            runCatching {
+                writer.writeLastChunk(messageId, createdTime, modelId, metrics)
+                XLog.tag(tag).d("chatSessionStreamingGenerate modelId:$modelId done")
+            }.onFailure {
+                XLog.tag(tag).e("chatSessionStreamingGenerate modelId:$modelId onFailure:$it")
+            }
         }
     }
 
@@ -331,5 +328,23 @@ class MNNHandler @Inject constructor(
 
     private fun updateAssistantSystemPrompt(chatSession: ChatSession) {
         chatSession.updateSystemPrompt("You are a helpful assistant.")
+    }
+
+    private fun embeddingByEmbeddingModel(
+        input: JSONArray,
+        modelId: String,
+        embeddingSession: EmbeddingSession
+    ): JSONObject {
+        val embedding = embeddingSession.embedding(input.getString(0))
+        val result = JSONObject()
+            .put("object", "list")
+            .put("data", JSONArray().put(
+                JSONObject()
+                    .put("object", "embedding")
+                    .put("embedding", JSONArray(embedding))
+                    .put("index", 0)
+            ))
+            .put("model", modelId)
+        return result
     }
 }

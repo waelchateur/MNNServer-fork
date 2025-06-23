@@ -171,6 +171,15 @@ fun ModelListScreen(navController: NavHostController) {
                 }
                 .sortedByDescending { it.second } // 先显示 loaded 的模型
 
+
+            items(userUploadModels.size) { index ->
+                val model = userUploadModels[index]
+                UserUploadModelItemView(
+                    model = model,
+                    loaded = loadedModels.contains(model.id),
+                )
+            }
+
             items(combinedSortedModels.size) { index ->
                 val (model, isLoaded, type) = combinedSortedModels[index]
                 DownloadModelItemView(

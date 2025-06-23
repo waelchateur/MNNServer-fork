@@ -52,13 +52,22 @@ class UserUploadModelRepository @Inject constructor(
     @LogBefore("")
     @LogAfter("")
     suspend fun loadModel(model: ModelInfo) {
-        llmService.createChatSession(
+//        llmService.createChatSession(
+//            modelId = model.id,
+//            modelDir = model.path,
+//            sessionId = model.id,
+//            modelItem = ModelItem().apply {
+//                modelId = model.id
+//                addTag("chat")
+//            }
+//        )
+        llmService.createEmbeddingSession(
             modelId = model.id,
             modelDir = model.path,
             sessionId = model.id,
             modelItem = ModelItem().apply {
                 modelId = model.id
-                addTag("chat")
+                addTag("embedding")
             }
         )
     }

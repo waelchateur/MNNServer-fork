@@ -3,6 +3,7 @@ package io.kindbrave.mnn.webserver.repository
 import android.content.Context
 import com.alibaba.mls.api.ModelItem
 import com.alibaba.mls.api.download.ModelDownloadManager
+import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnn.webserver.annotation.LogAfter
 import io.kindbrave.mnn.webserver.service.LLMService
@@ -20,7 +21,8 @@ class MNNModelRepository @Inject constructor(
         if (llmService.isModelLoaded(model.modelId.toString())) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
         val modelPath = getDownloadPath(model.modelId!!)
-        if (model.getTags().contains("embedding")) {
+        // chat-embedding标签为自定义，需要使用chat加载
+        if (model.getTags().contains("embedding") && model.getTags().contains("chat-embedding").not()) {
             llmService.createEmbeddingSession(
                 modelId = model.modelId!!,
                 modelDir = modelPath,

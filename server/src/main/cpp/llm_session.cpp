@@ -247,11 +247,5 @@ void LlmSession::SetAssistantPrompt(const std::string& assistant_prompt) {
     MNN_DEBUG("dumped config: %s", llm_->dump_config().c_str());
 }
 
-MNN::Express::VARP LlmSession::embedding(const std::string& text_cstr) {
-    if (llm_) {
-        return llm_->embedding(llm_->tokenizer_encode(text_cstr));
-    }
-    return nullptr;
-}
 
 }
