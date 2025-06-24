@@ -10,7 +10,7 @@ import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnn.webserver.annotation.LogAfter
 import io.kindbrave.mnn.webserver.annotation.LogBefore
-import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnn.server.service.LLMService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

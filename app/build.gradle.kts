@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.android.aop)
 }
 
 android {
@@ -61,7 +62,7 @@ dependencies {
 
     implementation(project(":mnnui"))
     implementation(project(":server"))
-    implementation(project(":sherpa"))
+    implementation(project(":tts"))
     implementation(project(":mnn-base"))
     implementation(project(":webserver"))
 
@@ -70,6 +71,9 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     implementation(libs.xlog)
+
+    implementation(libs.android.aop.core)
+    ksp(libs.android.aop.ksp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

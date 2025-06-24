@@ -24,7 +24,7 @@ import com.alibaba.mls.api.download.ml.MLModelDownloader
 import com.alibaba.mls.api.download.ms.MsModelDownloader
 import com.alibaba.mls.api.source.ModelSources
 import com.alibaba.mnnllm.android.utils.FileUtils.clearMmapCache
-import io.kindbrave.mnn.server.utils.ModelConfig
+import io.kindbrave.mnn.base.utils.ModelConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch

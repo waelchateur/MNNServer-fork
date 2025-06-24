@@ -10,7 +10,7 @@
 
     <application>
         <service
-            android:name=".service.WebServerService"
+            android:name="io.kindbrave.mnn.mnnui.service.WebServerService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse"/>

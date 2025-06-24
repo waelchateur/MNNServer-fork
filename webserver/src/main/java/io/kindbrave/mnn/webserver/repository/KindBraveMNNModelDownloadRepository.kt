@@ -10,8 +10,8 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.kindbrave.mnn.server.modelapi.download.KindBraveModelDownloadManager
-import io.kindbrave.mnn.server.modelapi.hf.KindBraveHfApiClient
+import io.kindbrave.mnn.base.modelapi.download.KindBraveModelDownloadManager
+import io.kindbrave.mnn.base.modelapi.hf.KindBraveHfApiClient
 import io.kindbrave.mnn.webserver.annotation.LogAfter
 import io.kindbrave.mnn.webserver.annotation.LogBefore
 import java.io.BufferedReader

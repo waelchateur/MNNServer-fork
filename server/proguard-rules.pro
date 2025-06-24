@@ -41,11 +41,11 @@
 -keepattributes Signature
 -keepattributes Exceptions
 
--keep class io.kindbrave.mnn.server.engine.** {*;}
+-keep class io.kindbrave.mnn.base.engine.** {*;}
 
 -keep class kotlin.Pair { *; }
 
--keep class io.kindbrave.mnn.server.utils.ModelConfig {*;}
+-keep class io.kindbrave.mnn.base.utils.ModelConfig {*;}
 
 -keep class io.kindbrave.mnn.server.MNN {*;}
 

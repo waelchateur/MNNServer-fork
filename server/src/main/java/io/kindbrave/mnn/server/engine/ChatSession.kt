@@ -9,7 +9,7 @@ import com.google.gson.Gson
 import io.kindbrave.mnn.server.engine.MNNLlm.AudioDataListener
 import io.kindbrave.mnn.server.engine.MNNLlm.GenerateProgressListener
 import io.kindbrave.mnn.server.utils.FileUtils
-import io.kindbrave.mnn.server.utils.ModelConfig
+import io.kindbrave.mnn.base.utils.ModelConfig
 import java.io.File
 
 class ChatSession(
@@ -38,13 +38,6 @@ class ChatSession(
     fun load() {
         modelLoading = true
 
-        var rootCacheDir: String? = ""
-        val configMap = HashMap<String, Any>().apply {
-            put("is_diffusion", isDiffusion)
-            put("is_r1", ModelUtils.isR1Model(modelId))
-            put("mmap_dir", rootCacheDir ?: "")
-            put("diffusion_memory_mode", diffusionMemoryMode)
-        }
         val extraConfig = ModelConfig.loadConfig(configPath, getModelSettingsFile())?.apply {
             if (io.kindbrave.mnn.server.utils.ModelUtils.isNeedConfigThinkMode(modelId)) {
                 extraAssistantPrompt = if (this.thinkingMode == true) {
@@ -55,9 +48,16 @@ class ChatSession(
                 this.assistantPromptTemplate = extraAssistantPrompt
             }
         }
+        var rootCacheDir: String? = ""
         if (extraConfig?.mmap == true) {
             rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))
             File(rootCacheDir).mkdirs()
+        }
+        val configMap = HashMap<String, Any>().apply {
+            put("is_diffusion", isDiffusion)
+            put("is_r1", ModelUtils.isR1Model(modelId))
+            put("mmap_dir", rootCacheDir ?: "")
+            put("diffusion_memory_mode", diffusionMemoryMode)
         }
         nativePtr = MNNLlm.initNative(
             configPath,

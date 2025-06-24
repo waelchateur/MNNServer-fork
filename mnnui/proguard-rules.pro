@@ -101,7 +101,7 @@
 -dontwarn com.oracle.svm.core.annotate.RecomputeFieldValue$Kind
 -dontwarn com.oracle.svm.core.annotate.RecomputeFieldValue
 -dontwarn com.oracle.svm.core.annotate.TargetClass
--dontwarn io.kindbrave.mnn.server.utils.ModelConfig$Companion
+-dontwarn io.kindbrave.mnn.base.utils.ModelConfig$Companion
 -dontwarn io.kindbrave.mnn.server.utils.ModelUtils
 -dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
 -dontwarn io.netty.internal.tcnative.AsyncTask

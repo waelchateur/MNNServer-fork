@@ -60,9 +60,9 @@ dependencies {
 
     implementation(libs.androidx.compose.material.icons.extended)
 
-    compileOnly(project(":server"))
-    compileOnly(project(":webserver"))
-    compileOnly(project(":mnn-base"))
+    implementation(project(":server"))
+    implementation(project(":webserver"))
+    implementation(project(":mnn-base"))
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

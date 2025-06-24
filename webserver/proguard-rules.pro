@@ -43,5 +43,5 @@
 -keep class kotlin.Pair { *; }
 
 -dontwarn com.alibaba.mnnllm.android.utils.FileUtils
--dontwarn io.kindbrave.mnn.server.utils.ModelConfig$Companion
+-dontwarn io.kindbrave.mnn.base.utils.ModelConfig$Companion
 -dontwarn java.lang.invoke.StringConcatFactory

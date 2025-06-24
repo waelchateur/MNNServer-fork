@@ -44,8 +44,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    compileOnly(project(":mnn-base"))
-    compileOnly(project(":server"))
+    implementation(project(":mnn-base"))
+    implementation(project(":server"))
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.ktor.server.core)

@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.android.aop)
     id("kotlin-android")
     id("maven-publish")
 }
@@ -52,7 +55,16 @@ dependencies {
     implementation(libs.google.gson)
 
     implementation(project(":mnn-base"))
-    compileOnly(project(":sherpa"))
+    implementation(project(":tts"))
+
+    implementation(libs.android.aop.core)
+    ksp(libs.android.aop.ksp)
+
+    implementation(libs.xlog)
+
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

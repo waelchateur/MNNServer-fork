@@ -3,10 +3,9 @@ package io.kindbrave.mnn.webserver.repository
 import android.content.Context
 import com.alibaba.mls.api.ModelItem
 import com.alibaba.mls.api.download.ModelDownloadManager
-import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.kindbrave.mnn.webserver.annotation.LogAfter
-import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnn.server.service.LLMService
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,10 +56,12 @@ class MNNModelRepository @Inject constructor(
     suspend fun unloadModel(model: ModelItem) {
         if (llmService.isModelLoaded(model.modelId.toString()).not()) return
         if (model.modelId.isNullOrBlank()) throw NullPointerException("modelId is null")
-        if (model.getTags().contains("embedding")) {
+        if (model.getTags().contains("embedding") && model.getTags().contains("chat-embedding").not()) {
             llmService.removeEmbeddingSession(model.modelId!!)
         } else if (model.getTags().contains("asr")) {
             llmService.removeAsrSession(model.modelId!!)
+        } else if (model.getTags().contains("tts")) {
+            llmService.removeTTSSession(model.modelId!!)
         } else {
             llmService.removeChatSession(model.modelId!!)
         }

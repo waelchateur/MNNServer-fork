@@ -3,12 +3,12 @@ package io.kindbrave.mnn.webserver.webserver
 import android.content.Context
 import com.elvishew.xlog.XLog
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnn.server.service.LLMService
 import io.kindbrave.mnn.webserver.webserver.request.TTSTextRequest
 import io.kindbrave.mnn.webserver.webserver.utils.TTSUtils
 import kotlinx.io.IOException
 import java.security.InvalidParameterException
-import java.util.UUID
+import java.util.Arrays
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,6 +37,7 @@ class MNNTTSHandler @Inject constructor(
             throw IOException("Failed to generate audio: $e")
         }
 
+        XLog.tag(tag).d("TTS generation successful")
         return audioData
     }
 }

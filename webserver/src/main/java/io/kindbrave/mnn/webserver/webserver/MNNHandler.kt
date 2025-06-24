@@ -8,7 +8,7 @@ import io.kindbrave.mnn.server.engine.ChatSession
 import io.kindbrave.mnn.server.engine.EmbeddingSession
 import io.kindbrave.mnn.server.engine.MNNAsr
 import io.kindbrave.mnn.server.engine.MNNLlm
-import io.kindbrave.mnn.webserver.service.LLMService
+import io.kindbrave.mnn.server.service.LLMService
 import io.kindbrave.mnn.webserver.webserver.request.ChatGenerateRequest
 import io.kindbrave.mnn.webserver.webserver.request.FunctionTool
 import io.kindbrave.mnn.webserver.webserver.request.Message

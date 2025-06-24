@@ -6,7 +6,7 @@ package io.kindbrave.mnn.server.engine
 import android.util.Log
 import com.google.gson.Gson
 import io.kindbrave.mnn.server.utils.FileUtils
-import io.kindbrave.mnn.server.utils.ModelConfig
+import io.kindbrave.mnn.base.utils.ModelConfig
 import java.io.File
 
 class EmbeddingSession(
@@ -30,15 +30,19 @@ class EmbeddingSession(
     fun load() {
         modelLoading = true
 
-        var rootCacheDir: String? = ""
-        val configMap = HashMap<String, Any>().apply {
-            put("mmap_dir", rootCacheDir ?: "")
-        }
+
         val extraConfig = ModelConfig.loadConfig(configPath, getModelSettingsFile())
+
+        var rootCacheDir: String? = ""
         if (extraConfig?.mmap == true) {
             rootCacheDir = FileUtils.getMmapDir(modelId, configPath.contains("modelscope"))
             File(rootCacheDir).mkdirs()
         }
+
+        val configMap = HashMap<String, Any>().apply {
+            put("mmap_dir", rootCacheDir ?: "")
+        }
+
         Log.d(tag, "MNN_DEBUG load initNative")
         nativePtr = MNNEmbedding.initNative(
             configPath,
