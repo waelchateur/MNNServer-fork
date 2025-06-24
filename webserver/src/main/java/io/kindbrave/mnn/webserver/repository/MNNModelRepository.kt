@@ -36,6 +36,13 @@ class MNNModelRepository @Inject constructor(
                 sessionId = model.modelId!!,
                 modelItem = model
             )
+        } else if (model.getTags().contains("tts")) {
+            llmService.createTTSSession(
+                modelId = model.modelId!!,
+                modelDir = modelPath,
+                sessionId = model.modelId!!,
+                modelItem = model
+            )
         } else {
             llmService.createChatSession(
                 modelId = model.modelId!!,

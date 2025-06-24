@@ -4,6 +4,7 @@ package io.kindbrave.mnnserver.utils
 
 import com.alibaba.mls.api.ModelItem
 import com.alibaba.mnnllm.android.model.ModelUtils
+import io.kindbrave.mnnserver.annotation.LogBefore
 
 object CustomModelUtils {
 

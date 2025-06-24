@@ -51,10 +51,8 @@ dependencies {
 
     implementation(libs.google.gson)
 
-    implementation(libs.retrofit2)
-    implementation(libs.retrofit2.converter.gson)
-    implementation(libs.okhttp3)
-    implementation(libs.okhttp3.logging)
+    implementation(project(":mnn-base"))
+    compileOnly(project(":sherpa"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

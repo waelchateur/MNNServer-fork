@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.kindbrave.mnn.webserver.webserver.KtorServer
 import io.kindbrave.mnn.webserver.webserver.MNNHandler
+import io.kindbrave.mnn.webserver.webserver.MNNTTSHandler
 import io.kindbrave.mnnserver.repository.SettingsRepository
 import javax.inject.Singleton
 
@@ -16,8 +17,9 @@ object KtorServerModule {
     @Provides
     @Singleton
     fun provideKtorServer(
-        mnnHandler: MNNHandler
+        mnnHandler: MNNHandler,
+        mnnTtsHandler: MNNTTSHandler,
     ): KtorServer {
-        return KtorServer(mnnHandler)
+        return KtorServer(mnnHandler, mnnTtsHandler)
     }
 }

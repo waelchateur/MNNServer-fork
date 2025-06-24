@@ -10,6 +10,7 @@ import io.kindbrave.mnn.server.engine.AsrSession
 import io.kindbrave.mnn.server.engine.ChatSession
 import io.kindbrave.mnn.server.engine.EmbeddingSession
 import io.kindbrave.mnn.server.engine.Session
+import io.kindbrave.mnn.server.engine.TTSSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -21,6 +22,7 @@ class LLMService @Inject constructor() {
     private val chatSessionMap = mutableMapOf<String, ChatSession>()
     private val embeddingSessionMap = mutableMapOf<String, EmbeddingSession>()
     private val asrSessionMap = mutableMapOf<String, AsrSession>()
+    private val ttsSessionMap = mutableMapOf<String, TTSSession>()
     private val _loadedModelsState: MutableStateFlow<MutableMap<String, ModelItem>> = MutableStateFlow(mutableMapOf<String, ModelItem>())
     val loadedModelsState: StateFlow<Map<String, ModelItem>> = _loadedModelsState
 
@@ -109,6 +111,34 @@ class LLMService @Inject constructor() {
         return session
     }
 
+    @LogAfter("")
+    suspend fun createTTSSession(
+        modelId: String,
+        modelDir: String,
+        sessionId: String,
+        modelItem: ModelItem,
+    ): TTSSession {
+        var finalSessionId = sessionId
+        if (TextUtils.isEmpty(finalSessionId)) {
+            finalSessionId = System.currentTimeMillis().toString()
+        }
+
+        val session = TTSSession(
+            modelId = modelId,
+            sessionId = finalSessionId,
+            configPath = modelDir,
+        )
+        session.load()
+
+        ttsSessionMap[modelId] = session
+        _loadedModelsState.update { currentMap ->
+            currentMap.toMutableMap().apply {
+                put(modelId, modelItem)
+            }
+        }
+        return session
+    }
+
     fun getChatSession(modelId: String): ChatSession? {
         return chatSessionMap[modelId]
     }
@@ -119,6 +149,10 @@ class LLMService @Inject constructor() {
 
     fun getAsrSession(modelId: String): AsrSession? {
         return asrSessionMap[modelId]
+    }
+
+    fun getTTSSession(modelId: String): TTSSession? {
+        return ttsSessionMap[modelId]
     }
 
     suspend fun removeChatSession(modelId: String) {
@@ -151,8 +185,18 @@ class LLMService @Inject constructor() {
         }
     }
 
+    suspend fun removeTTSSession(modelId: String) {
+        ttsSessionMap[modelId]?.release()
+        ttsSessionMap.remove(modelId)
+        _loadedModelsState.update { currentMap ->
+            currentMap.toMutableMap().apply {
+                remove(modelId)
+            }
+        }
+    }
+
     fun getAllSessions(): List<Session> {
-        return chatSessionMap.values.toList() + embeddingSessionMap.values.toList() + asrSessionMap.values.toList()
+        return chatSessionMap.values.toList() + embeddingSessionMap.values.toList() + asrSessionMap.values.toList() + ttsSessionMap.values.toList()
     }
 
     fun getAllChatSessions(): List<ChatSession> {
@@ -167,6 +211,10 @@ class LLMService @Inject constructor() {
         return asrSessionMap.values.toList()
     }
 
+    fun getAllTTSSessions(): List<TTSSession> {
+        return ttsSessionMap.values.toList()
+    }
+
     suspend fun releaseAllSessions() {
         chatSessionMap.values.forEach { it.release() }
         chatSessionMap.clear()
@@ -174,10 +222,12 @@ class LLMService @Inject constructor() {
         embeddingSessionMap.clear()
         asrSessionMap.values.forEach { it.release() }
         asrSessionMap.clear()
+        ttsSessionMap.values.forEach { it.release() }
+        ttsSessionMap.clear()
         _loadedModelsState.emit(mutableMapOf())
     }
 
     fun isModelLoaded(modelId: String): Boolean {
-        return chatSessionMap.containsKey(modelId) || embeddingSessionMap.containsKey(modelId) || asrSessionMap.containsKey(modelId)
+        return chatSessionMap.containsKey(modelId) || embeddingSessionMap.containsKey(modelId) || asrSessionMap.containsKey(modelId) || ttsSessionMap.containsKey(modelId)
     }
 }

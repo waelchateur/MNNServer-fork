@@ -1,6 +1,5 @@
 package io.kindbrave.mnn.webserver.webserver
 
-import com.elvishew.xlog.XLog
 import io.kindbrave.mnn.webserver.webserver.config.configureAuthentication
 import io.kindbrave.mnn.webserver.webserver.config.configureCORS
 import io.kindbrave.mnn.webserver.webserver.config.configureLogging
@@ -19,7 +18,8 @@ import javax.inject.Singleton
 
 @Singleton
 class KtorServer @Inject constructor(
-    private val mnnHandler: MNNHandler
+    private val mnnHandler: MNNHandler,
+    private val mnnTtsHandler: MNNTTSHandler
 ) {
     val serverScope = CoroutineScope(Dispatchers.IO)
     var port = 8080
@@ -40,7 +40,7 @@ class KtorServer @Inject constructor(
                     configureLogging()
                     configureStatusPages()
                     configureWebSockets()
-                    configureRouting(mnnHandler)
+                    configureRouting(mnnHandler, mnnTtsHandler)
                 }.start(true)
                 result.complete(Result.success(Unit))
             }.onFailure {

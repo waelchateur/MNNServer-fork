@@ -1,6 +1,12 @@
 import org.gradle.kotlin.dsl.dir
 import org.gradle.kotlin.dsl.flatDir
 
+include(":mnn-base")
+
+
+include(":sherpa")
+
+
 include(":mnnui")
 
 

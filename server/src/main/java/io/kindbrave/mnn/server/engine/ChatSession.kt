@@ -4,7 +4,6 @@
 package io.kindbrave.mnn.server.engine
 
 import android.util.Log
-import com.alibaba.mls.api.ApplicationProvider
 import com.alibaba.mnnllm.android.model.ModelUtils
 import com.google.gson.Gson
 import io.kindbrave.mnn.server.engine.MNNLlm.AudioDataListener

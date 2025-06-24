@@ -61,6 +61,9 @@ dependencies {
 
     implementation(project(":mnnui"))
     implementation(project(":server"))
+    implementation(project(":sherpa"))
+    implementation(project(":mnn-base"))
+    implementation(project(":webserver"))
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
