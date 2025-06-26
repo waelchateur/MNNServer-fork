@@ -1,7 +1,5 @@
 package com.taobao.meta.avatar.tts
 
-import android.util.Log
-import com.k2fsa.sherpa.mnn.GeneratedAudio
 import com.taobao.meta.avatar.utils.AppUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -13,7 +11,7 @@ class TtsService {
     val useSherpaTts
         get() = false
 
-    private var sherpaTts: SherpaTts? = null
+//    private var sherpaTts: SherpaTts? = null
     private var ttsServiceNative: Long = 0
     @Volatile
     private var isLoaded = false
@@ -33,8 +31,8 @@ class TtsService {
         if (initDeferred == null) {
             initDeferred = CoroutineScope(Dispatchers.IO).async {
                 if (useSherpaTts) {
-                    sherpaTts = SherpaTts()
-                    sherpaTts?.init(null)
+//                    sherpaTts = SherpaTts()
+//                    sherpaTts?.init(null)
                     return@async true
                 }
                 nativeLoadResourcesFromFile(ttsServiceNative,
@@ -67,12 +65,12 @@ class TtsService {
         return nativeProcess(ttsServiceNative, text, id)
     }
 
-    fun processSherpa(text: String, id: Int): GeneratedAudio? {
-        Log.d(TAG, "processSherpa: $text $id")
-        synchronized(this) {
-            return sherpaTts?.process(text)
-        }
-    }
+//    fun processSherpa(text: String, id: Int): GeneratedAudio? {
+//        Log.d(TAG, "processSherpa: $text $id")
+//        synchronized(this) {
+//            return sherpaTts?.process(text)
+//        }
+//    }
 
     // Native methods
     private external fun nativeSetCurrentIndex(ttsServiceNative: Long, index: Int);

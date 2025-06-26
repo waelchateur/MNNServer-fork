@@ -31,7 +31,7 @@ class MNNTTSHandler @Inject constructor(
             ?: throw InvalidParameterException("TTS session not found for model: $modelId")
 
         val audioData = try {
-            TTSUtils.shortArrayToWavFile(ttsSession.process(text, 0))
+            TTSUtils.addWavHeader(ttsSession.process(text, 0))
         } catch (e: Exception) {
             XLog.tag(tag).e("TTS generation failed: $e")
             throw IOException("Failed to generate audio: $e")

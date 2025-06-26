@@ -15,8 +15,8 @@ android {
         applicationId = "io.kindbrave.mnnserver"
         minSdk = 29
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.0.5"
+        versionCode = 6
+        versionName = "0.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -65,6 +65,7 @@ dependencies {
     implementation(project(":tts"))
     implementation(project(":mnn-base"))
     implementation(project(":webserver"))
+    implementation(project(":sherpa"))
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

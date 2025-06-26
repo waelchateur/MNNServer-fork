@@ -19,7 +19,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
     val githubUrl = "https://github.com/sunshine0523/MNNServer"
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = stringResource(R.string.app_name)) },
+        title = { Text(text = stringResource(R.string.mnn_app_name)) },
         text = {
             Column {
                 Text(

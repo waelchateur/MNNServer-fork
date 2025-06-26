@@ -26,7 +26,10 @@
 # gson
 -keep class com.google.gson.reflect.TypeToken {*;}
 -keep class * extends com.google.gson.reflect.TypeToken
+-keep class io.kindbrave.mnn.server.utils.TTSModelType {*;}
+-keep class io.kindbrave.mnn.server.utils.TTSModelConfig {*;}
 -keepattributes AnnotationDefault, RuntimeVisibleAnnotations
+
 
 # retrofit2
 -dontwarn javax.annotation.**
@@ -41,12 +44,10 @@
 -keepattributes Signature
 -keepattributes Exceptions
 
--keep class io.kindbrave.mnn.base.engine.** {*;}
-
 -keep class kotlin.Pair { *; }
 
--keep class io.kindbrave.mnn.base.utils.ModelConfig {*;}
-
 -keep class io.kindbrave.mnn.server.MNN {*;}
+
+-keep class io.kindbrave.mnn.server.engine.** {*;}
 
 -dontwarn java.lang.invoke.StringConcatFactory

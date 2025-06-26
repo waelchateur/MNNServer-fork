@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-android")
+    id("maven-publish")
 }
 
 android {
@@ -48,4 +50,25 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "io.kindbrave"
+            artifactId = "mnn.base"
+            version = "0.0.6"
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "local"
+            url = uri("${rootProject.projectDir}/repo")
+        }
+    }
 }

@@ -22,6 +22,7 @@ class SettingsRepository @Inject constructor(
         private val DOWNLOAD_PROVIDER_KEY = stringPreferencesKey("download_provider")
         private val EXPORT_WEB_PORT = booleanPreferencesKey("export_web_port")
         private val START_LAST_RUNNING_MODELS = booleanPreferencesKey("start_last_running_models")
+        private val DEFAULT_TTS_MODEL_ID = stringPreferencesKey("default_tts_model_id")
         private const val DEFAULT_SERVER_PORT = 8080
     }
 
@@ -73,5 +74,15 @@ class SettingsRepository @Inject constructor(
 
     suspend fun getStartLastRunningModels() = context.dataStore.data.map { preferences ->
         preferences[START_LAST_RUNNING_MODELS] == true
+        }.first()
+
+    suspend fun setDefaultTTSModelId(modelId: String) {
+        context.dataStore.edit { preferences ->
+            preferences[DEFAULT_TTS_MODEL_ID] = modelId
+        }
+    }
+
+    suspend fun getDefaultTTSModelId() = context.dataStore.data.map { preferences ->
+        preferences[DEFAULT_TTS_MODEL_ID]?: ""
         }.first()
 }

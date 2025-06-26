@@ -1,13 +1,11 @@
-// Created by ruoyi.sjd on 2025/4/18.
-// Copyright (c) 2024 Alibaba Group Holding Limited All rights reserved.
-
-package com.taobao.meta.avatar.tts
+package io.kindbrave.mnn.sherpa
 
 import com.k2fsa.sherpa.mnn.GeneratedAudio
 import com.k2fsa.sherpa.mnn.OfflineTts
 import com.k2fsa.sherpa.mnn.OfflineTtsConfig
 import com.k2fsa.sherpa.mnn.OfflineTtsKokoroModelConfig
 import com.k2fsa.sherpa.mnn.OfflineTtsModelConfig
+import com.k2fsa.sherpa.mnn.OfflineTtsVitsModelConfig
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,7 +17,7 @@ class SherpaTts {
     private var hasLoading = false
     private val initComplete = CompletableDeferred<Boolean>()
 
-    suspend fun init(modelDir: String?) {
+    suspend fun init(config: OfflineTtsConfig) {
         if (initComplete.isCompleted) {
             return
         }
@@ -27,22 +25,7 @@ class SherpaTts {
             initComplete.await()
         }
         withContext(Dispatchers.IO) {
-            val tts_path = "/data/local/tmp/kokoro-multi-lang-v1_0"
-            val config = OfflineTtsConfig(
-                model= OfflineTtsModelConfig(
-                    kokoro= OfflineTtsKokoroModelConfig(
-                        model="${tts_path}/model.mnn",
-                        voices="${tts_path}/voices.bin",
-                        tokens="${tts_path}/tokens.txt",
-                        dataDir="${tts_path}/espeak-ng-data",
-                        dictDir="${tts_path}/dict",
-                        lexicon="${tts_path}/lexicon-us-en.txt,${tts_path}/lexicon-zh.txt",
-                    ),
-                    numThreads=2,
-                    debug=true,
-                ),
-            )
-            tts = OfflineTts(config=config)
+            tts = OfflineTts(config = config)
         }
         initComplete.complete(true)
     }
@@ -57,5 +40,11 @@ class SherpaTts {
 
     fun release() {
         tts.release()
+    }
+
+    companion object {
+        init {
+            System.loadLibrary("sherpa-mnn-jni")
+        }
     }
 }

@@ -9,6 +9,7 @@ import android.util.Log
 import com.elvishew.xlog.XLog
 import dagger.hilt.android.AndroidEntryPoint
 import io.kindbrave.mnn.mnnui.di.ApplicationScope
+import io.kindbrave.mnn.mnnui.repository.SettingsRepository
 import io.kindbrave.mnn.server.service.LLMService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -29,12 +30,30 @@ class TTSService : TextToSpeechService() {
     @ApplicationScope
     lateinit var scope: CoroutineScope
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
+    private var modelId: String? = null
+
     override fun onIsLanguageAvailable(
         lang: String,
         country: String,
         variant: String
     ): Int {
-        return TextToSpeech.LANG_AVAILABLE
+        return runBlocking {
+            modelId = settingsRepository.getDefaultTTSModelId()
+            if (modelId.isNullOrBlank()) {
+                XLog.tag(tag).e("Model id is null")
+                TextToSpeech.ERROR
+            }
+            val session = llmService.getTTSSession(modelId!!)
+            if (session == null) {
+                XLog.tag(tag).e("Session is null")
+                TextToSpeech.ERROR
+            }
+
+            TextToSpeech.LANG_AVAILABLE
+        }
     }
 
     override fun onGetLanguage(): Array<out String> {
@@ -62,32 +81,37 @@ class TTSService : TextToSpeechService() {
     ) {
         val text = request.charSequenceText.toString()
 
-        // 按照标点符合分割分别，并保留标点符号
-        val sentences = Regex("[^\\p{P}\\p{S}]+[\\p{P}\\p{S}]")
-            .findAll(text)
-            .map { it.value.trim() }
-            .toList()
+        // 按照标点符合分割
+//        val sentences = Regex("[^\\p{P}\\p{S}]+[\\p{P}\\p{S}]")
+//            .findAll(text)
+//            .map { it.value.trim() }
+//            .toList()
+        val sentences = text
+            .split(Regex("[\\p{P}\\p{S}]+"))
+            .map { it.replace(Regex("[^\\p{L}\\p{N}]"), "") }
+            .filter { it.isNotBlank() }
 
-        val session = llmService.getTTSSession("KindBrave/bert-vits2-MNN-Custom")
+        if (modelId.isNullOrBlank()) {
+            callback.error()
+            return
+        }
+        val session = llmService.getTTSSession(modelId!!)
         if (session == null) {
             callback.error()
             return
         }
 
-        callback.start(41200, AudioFormat.ENCODING_PCM_16BIT, 1)
+        callback.start(session.getSampleRate(), AudioFormat.ENCODING_PCM_16BIT, 1)
         val maxBufferSize = callback.maxBufferSize
 
         try {
             runBlocking {
-                var nextSegmentJob: Deferred<ShortArray>? = null
+                var nextSegmentJob: Deferred<ByteArray>? = null
 
                 sentences.forEachIndexed { index, sentence ->
                     Log.d(tag, "onSynthesizeText: $sentence")
-                    val currentSegmentData = if (nextSegmentJob != null) {
-                        shortArrayToByteArray(nextSegmentJob.await())
-                    } else {
-                        shortArrayToByteArray(session.process(sentence, index))
-                    }
+                    val currentSegmentData =
+                        nextSegmentJob?.await() ?: session.process(sentence, index)
 
                     nextSegmentJob = if (index < sentences.size - 1) {
                         scope.async(Dispatchers.Default) {
@@ -116,15 +140,5 @@ class TTSService : TextToSpeechService() {
             XLog.tag(tag).e("onSynthesizeText error: ${e.message}", e)
             callback.error()
         }
-    }
-
-    private fun shortArrayToByteArray(shorts: ShortArray): ByteArray {
-        val bytes = ByteArray(shorts.size * 2)
-        for (i in shorts.indices) {
-            val short = shorts[i]
-            bytes[i * 2] = (short.toInt() and 0xFF).toByte()
-            bytes[i * 2 + 1] = (short.toInt() shr 8 and 0xFF).toByte()
-        }
-        return bytes
     }
 }

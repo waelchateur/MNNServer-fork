@@ -56,6 +56,7 @@ dependencies {
 
     implementation(project(":mnn-base"))
     implementation(project(":tts"))
+    implementation(project(":sherpa"))
 
     implementation(libs.android.aop.core)
     ksp(libs.android.aop.ksp)

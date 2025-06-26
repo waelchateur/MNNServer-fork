@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">MNN 服务器</string>
+    <string name="mnn_app_name">MNN 服务器</string>
     <string name="main_screen_title">MNN 服务器</string>
     <string name="server_status">服务器状态</string>
     <string name="server_running">运行中 (端口: %1$d)</string>
@@ -67,4 +68,8 @@
     <string name="start_last_running_models">启动上次运行的模型</string>
     <string name="start_last_running_models_description">启动服务时，同时启动上次运行的模型</string>
     <string name="server_starting">服务启动中</string>
+    <string name="default_tts_model">默认文字转语音模型</string>
+    <string name="default_tts_model_description">MNNServer作为系统TTS服务时使用的模型</string>
+    <string name="not_set">未配置</string>
+    <string name="tts">文字转语音|TTS</string>
 </resources> 

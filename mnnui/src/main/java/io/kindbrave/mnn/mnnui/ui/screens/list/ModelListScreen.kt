@@ -122,6 +122,15 @@ fun ModelListScreen(navController: NavHostController) {
                             DropdownMenuItem(
                                 onClick = {
                                     showDropdown = false
+                                    modelFilter = ModelFilter.TTS
+                                },
+                                text = {
+                                    Text(stringResource(R.string.tts))
+                                }
+                            )
+                            DropdownMenuItem(
+                                onClick = {
+                                    showDropdown = false
                                     modelFilter = ModelFilter.Custom
                                 },
                                 text = {
@@ -160,6 +169,8 @@ fun ModelListScreen(navController: NavHostController) {
                         downloadModels.filter { it.getTags().contains("embedding") }
                 ModelFilter.Asr -> customDownloadModels.filter { it.getTags().contains("asr") } +
                         downloadModels.filter { it.getTags().contains("asr") }
+                ModelFilter.TTS -> customDownloadModels.filter { it.getTags().contains("tts") } +
+                        downloadModels.filter { it.getTags().contains("tts") }
                 ModelFilter.Custom -> customDownloadModels // 不加 downloadModels
             }
 
@@ -243,5 +254,6 @@ sealed class ModelFilter  {
     object Chat : ModelFilter()
     object Embedding : ModelFilter()
     object Asr: ModelFilter()
+    object TTS: ModelFilter()
     object Custom: ModelFilter()
 }

@@ -6,6 +6,7 @@ A third-party MNN server supporting external calls, vector model, and speech rec
 
 # News 🔥
 
+- [2024/06/26 v0.0.6] Offline text-to-speech TTS models are supported, and the TTS engine supports Sherpa and Bert-VITS2
 - [2025/06/03 v0.0.3] Support offline voice recognition models
 
 

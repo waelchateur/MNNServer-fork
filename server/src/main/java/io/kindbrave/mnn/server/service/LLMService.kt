@@ -2,6 +2,7 @@ package io.kindbrave.mnn.server.service
 
 import android.text.TextUtils
 import com.alibaba.mls.api.ModelItem
+import com.elvishew.xlog.XLog
 import io.kindbrave.mnn.server.annotation.LogAfter
 import io.kindbrave.mnn.server.engine.AsrSession
 import io.kindbrave.mnn.server.engine.ChatSession
@@ -16,6 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class LLMService @Inject constructor() {
+    private val tag = LLMService::class.java.simpleName
     private val chatSessionMap = mutableMapOf<String, ChatSession>()
     private val embeddingSessionMap = mutableMapOf<String, EmbeddingSession>()
     private val asrSessionMap = mutableMapOf<String, AsrSession>()
@@ -115,25 +117,30 @@ class LLMService @Inject constructor() {
         sessionId: String,
         modelItem: ModelItem,
     ): TTSSession {
-        var finalSessionId = sessionId
-        if (TextUtils.isEmpty(finalSessionId)) {
-            finalSessionId = System.currentTimeMillis().toString()
-        }
-
-        val session = TTSSession(
-            modelId = modelId,
-            sessionId = finalSessionId,
-            configPath = modelDir,
-        )
-        session.load()
-
-        ttsSessionMap[modelId] = session
-        _loadedModelsState.update { currentMap ->
-            currentMap.toMutableMap().apply {
-                put(modelId, modelItem)
+        try {
+            var finalSessionId = sessionId
+            if (TextUtils.isEmpty(finalSessionId)) {
+                finalSessionId = System.currentTimeMillis().toString()
             }
+
+            val session = TTSSession(
+                modelId = modelId,
+                sessionId = finalSessionId,
+                configPath = modelDir,
+            )
+            session.load()
+
+            ttsSessionMap[modelId] = session
+            _loadedModelsState.update { currentMap ->
+                currentMap.toMutableMap().apply {
+                    put(modelId, modelItem)
+                }
+            }
+            return session
+        } catch (e: Exception) {
+            XLog.tag(tag).e("Failed to create tts session", e)
+            throw e
         }
-        return session
     }
 
     fun getChatSession(modelId: String): ChatSession? {
